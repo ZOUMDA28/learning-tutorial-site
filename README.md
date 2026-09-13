@@ -7,24 +7,23 @@
 ## 功能特性
 
 - **直接渲染 .ipynb 文件** - 无需后端，前端直接解析 Notebook
-- **中英双语切换** - 支持多语言教程
+- **嵌套目录支持** - Notebook 可放在任意深度的子目录中
+- **图片路径自动重写** - Markdown 中的相对图片路径自动指向正确位置
 - **侧边栏目录导航** - 按学习路径组织内容
 - **右侧大纲导航** - 快速跳转到章节
 - **代码语法高亮** - Python 代码智能高亮
 - **Markdown 完整渲染** - 标题、列表、表格、引用、代码块
 - **数学公式支持** - KaTeX 渲染 LaTeX 公式
-- **浅色/深色主题** - 三种主题模式切换
+- **浅色/深色主题** - 主题模式切换，支持自定义颜色
 - **字号调整** - 小/中/大三档字号
 - **笔记和书签** - 本地存储学习笔记
-- **文字选中工具栏** - 复制、笔记、高亮、分享
 - **代码折叠展开** - 长代码默认折叠
 - **输出折叠展开** - 长输出默认折叠
 - **图片灯箱** - 点击放大查看
-- **新手引导** - 交互式教程引导
-- **更新日志** - Git log 自动生成
 - **URL hash 路由** - 支持分享链接
 - **响应式设计** - 移动端完美适配
 - **预取缓存** - 智能预取提升切换速度
+- **GitHub Actions 自动部署** - 推送即部署到 GitHub Pages
 
 ## 技术栈
 
@@ -41,10 +40,7 @@
 ### 方式一：克隆到工作区
 
 ```bash
-# 在你的工作区根目录下创建 .trae/skills 目录
 mkdir -p .trae/skills
-
-# 克隆本仓库
 cd .trae/skills
 git clone https://github.com/ZOUMDA28/learning-tutorial-site.git
 ```
@@ -65,46 +61,45 @@ git clone https://github.com/ZOUMDA28/learning-tutorial-site.git
 ## 项目结构
 
 ```
-tutorial-site/                    # 生成的教程网站项目
-├── notebooks/                    # 中文教程笔记本（.ipynb 文件）
-│   ├── part1-foundation/         # 基础篇
-│   ├── part2-training/           # 训练篇
-│   ├── part3-inference/          # 推理篇
-│   ├── part4-frontiers/          # 前沿篇
-│   └── appendix-advanced/        # 附录
-├── notebooks-en/                 # 英文教程笔记本（可选）
+tutorial-site/
+├── notebooks/                    # 教程笔记本
+│   ├── part1-image-processing/   # 第一部分
+│   │   ├── 数字图像的获取和表示/  # 子目录（支持嵌套）
+│   │   │   ├── practice.ipynb
+│   │   │   └── lena.jpeg         # 图片资源
+│   │   └── 几何变换/
+│   │       └── practice.ipynb
+│   └── part2-optimization-3d/    # 第二部分
 ├── web/                          # React/Vite 前端网站
 │   ├── src/
 │   │   ├── components/           # React 组件
-│   │   │   ├── Sidebar.jsx
-│   │   │   ├── NotebookViewer.jsx
-│   │   │   ├── Welcome.jsx
-│   │   │   ├── NotesPanel.jsx
-│   │   │   ├── SettingsPanel.jsx
-│   │   │   ├── GuidedTour.jsx
-│   │   │   ├── ChangelogModal.jsx
-│   │   │   └── ImageLightbox.jsx
 │   │   ├── context/              # Context 状态管理
 │   │   ├── data/                 # 数据配置
 │   │   │   ├── notebooks.js      # Notebook 加载与渲染
 │   │   │   └── sidebar.js        # 侧边栏数据
 │   │   ├── hooks/                # 自定义 Hooks
-│   │   │   ├── useSettings.js
-│   │   │   ├── useTheme.js
-│   │   │   └── useNotesAndBookmarks.js
 │   │   ├── styles/               # 全局样式
-│   │   ├── utils/                # 工具函数
 │   │   ├── App.jsx
-│   │   ├── config.js
 │   │   └── main.jsx
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
-├── scripts/                      # 维护脚本
-├── requirements.txt              # Python 依赖
-├── package.json                  # 根 package.json
+├── .github/workflows/           # GitHub Actions
+│   └── deploy.yml               # 自动部署工作流
 └── README.md
 ```
+
+## 嵌套目录支持
+
+Notebook 可以放在任意深度的子目录中。系统会自动：
+- 递归扫描所有 .ipynb 文件
+- 使用 `{子目录路径}-{文件名}` 作为唯一 ID
+- 从 Notebook 的第一个 markdown 一级标题提取标题
+- 重写 Markdown 中的相对图片路径
+
+## 图片资源处理
+
+Markdown 中的相对图片路径会被自动重写为正确的绝对路径。部署时需将 notebooks 目录复制到构建输出目录。
 
 ## 快速开始
 
@@ -114,19 +109,9 @@ tutorial-site/                    # 生成的教程网站项目
 
 ### 2. 添加教程内容
 
-将你的 `.ipynb` 文件放入 `notebooks/` 对应的部分目录中，文件命名格式：
+将你的 `.ipynb` 文件放入 `notebooks/` 对应的部分目录中。
 
-```
-{序号}-{主题}.ipynb
-```
-
-例如：`01-introduction.ipynb`
-
-### 3. 配置侧边栏
-
-编辑 `web/src/data/sidebar.js`，配置你的学习路径和精选笔记本。
-
-### 4. 启动开发服务器
+### 3. 启动开发服务器
 
 ```bash
 cd web
@@ -134,44 +119,30 @@ npm install
 npm run dev
 ```
 
-### 5. 构建生产版本
+### 4. 部署到 GitHub Pages
 
-```bash
-cd web
-npm run build
-# 输出到 ../docs 目录
-```
+配置 `.github/workflows/deploy.yml`，推送到 main 分支即可自动部署。
 
-## 配置自定义教程
-
-### 修改网站标题
-
-修改 `web/index.html` 中的 `<title>` 标签。
-
-### 自定义主题色
+## 自定义主题色
 
 修改 `web/src/styles/index.css` 中的 CSS 变量：
 
 ```css
 :root {
-  --accent: #1d6bf3;           /* 主色调 */
+  --accent: #ea580c;           /* 主色调（橙色示例） */
   --brand-gradient-from: ...;  /* 渐变起始色 */
   --brand-gradient-to: ...;    /* 渐变结束色 */
 }
 ```
 
-### 添加新的学习路径
-
-编辑 `web/src/data/sidebar.js` 中的 `PATH_STEPS` 数组。
-
 ## 最佳实践
 
 1. **Notebook 结构**: 每篇 Notebook 遵循「直觉 → 手算 → 实现 → 实验」的学习路径
 2. **代码可读性**: 保持代码单元格短小，添加充分的注释
-3. **双语一致性**: 中英文版本的 Notebook 编号和结构保持对应
-4. **自包含**: 每篇 Notebook 应该可以独立运行，不依赖前面的状态
-5. **检查清单**: 每篇 Notebook 末尾添加总结检查清单
-6. **固定种子**: 涉及随机实验时使用固定种子，确保可复现
+3. **自包含**: 每篇 Notebook 应该可以独立运行
+4. **图片资源**: 图片放在 Notebook 同目录下，使用相对路径引用
+5. **固定种子**: 涉及随机实验时使用固定种子
+6. **npm install**: 在 GitHub Actions 中使用 npm install 而非 npm ci
 
 ## 参考项目
 
