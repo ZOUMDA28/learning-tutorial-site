@@ -138,7 +138,18 @@ Markdown 单元格中的相对图片路径会被自动重写：
 
 ## GitHub Actions 部署
 
-**.github/workflows/deploy.yml** 关键步骤：
+**.github/workflows/deploy.yml** 使用双部署策略，兼容两种 Pages 源设置：
+
+### 权限配置
+
+```yaml
+permissions:
+  contents: write    # 写权限：推送构建产物到 gh-pages 分支
+  pages: write       # 写权限：通过 actions/deploy-pages 部署
+  id-token: write    # OIDC 认证
+```
+
+### 关键步骤
 
 1. 递归复制中文目录到 notebooks 结构：
 ```bash
@@ -162,9 +173,37 @@ mkdir -p ../docs/notebooks
 cp -r ../notebooks/* ../docs/notebooks/
 ```
 
-5. 上传并部署到 GitHub Pages
+5. 部署方式 A：通过 GitHub Actions 部署（需要 Pages 源设为 GitHub Actions）：
+```yaml
+- uses: actions/upload-pages-artifact@v3
+  with:
+    path: docs
+- uses: actions/deploy-pages@v4
+  continue-on-error: true
+```
 
-注意：GitHub Pages 需配置为使用 GitHub Actions 作为部署源。
+6. 部署方式 B：推送到 gh-pages 分支（需要 Pages 源设为 Deploy from a branch → gh-pages）：
+```yaml
+- uses: peaceiris/actions-gh-pages@v4
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    publish_dir: docs
+    force_orphan: true
+```
+
+### GitHub Pages 源设置
+
+部署后需要在仓库 Settings → Pages 中配置源（二选一）：
+
+**选项 A（推荐）**：Source = GitHub Actions
+- 直接使用 actions/deploy-pages 的部署
+
+**选项 B**：Source = Deploy from a branch
+- Branch: `gh-pages`
+- Folder: `/` (root)
+- 使用 peaceiris/actions-gh-pages 推送到 gh-pages 分支的内容
+
+两种方式构建产物相同，区别仅在于 GitHub Pages 如何提供文件。
 
 ## Notebook 组织规范
 
@@ -187,6 +226,8 @@ cp -r ../notebooks/* ../docs/notebooks/
 4. **图片资源**: 图片放在 Notebook 同目录下，使用相对路径引用
 5. **固定种子**: 涉及随机实验时使用固定种子，确保可复现
 6. **npm install**: 在 GitHub Actions 中使用 npm install 而非 npm ci，避免 package-lock.json 依赖问题
+7. **双部署策略**: 同时使用 actions/deploy-pages 和 peaceiris/actions-gh-pages，兼容不同的 Pages 源设置
+8. **force_orphan**: gh-pages 分支使用 orphan commit，不保留构建历史，保持仓库整洁
 
 ## 参考模板
 
