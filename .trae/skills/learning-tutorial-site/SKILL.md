@@ -71,25 +71,27 @@ Markdown 单元格中的相对图片路径会被自动重写：
 
 部署时需要将 notebooks 目录复制到构建输出目录（docs/notebooks/），使图片可访问。
 
-## 章节排序
+## 章节排序与编号
 
-侧边栏中的章节按正序（1, 2, 3...）排列，而非按拼音或字母排序。
+侧边栏中的章节按正序（1, 2, 3... 9）连续排列，**不按部分重置**。
 
 ### 排序机制
 
-在 `notebooks.js` 中定义 `CHAPTER_ORDER` 映射表，将每个章节目录名映射到序号：
+在 `notebooks.js` 中定义 `CHAPTER_ORDER` 映射表，使用连续编号（1-9），第二部分不重置：
 
 ```javascript
 const CHAPTER_ORDER = {
+  // 图像处理基础（第1-6章）
   '数字图像的获取和表示': 1,
   '颜色空间的转换': 2,
   '基于直方图统计的处理': 3,
   '图像滤波': 4,
   '特征提取': 5,
   '几何变换': 6,
-  '图像拼接模型': 1,
-  '相机参数标定': 2,
-  '立体视觉点云重建': 3,
+  // 最优化与立体视觉（第7-9章，连续编号不重置）
+  '图像拼接模型': 7,
+  '相机参数标定': 8,
+  '立体视觉点云重建': 9,
 }
 ```
 
@@ -98,15 +100,31 @@ const CHAPTER_ORDER = {
 2. 按 `CHAPTER_ORDER[dir]`（章节号正序排列）
 3. `practice.ipynb` 在 `practice_extra.ipynb` 之前
 
+### getCatalog 必须传递 chapterOrder
+
+`getCatalog()` 返回的对象必须包含 `chapterOrder` 字段，否则侧边栏章节号会全部显示为 0：
+
+```javascript
+export function getCatalog() {
+  return NOTEBOOKS.map((entry) => ({
+    id: entry.id,
+    title: entry.title,
+    part,
+    partDir: entry.partDir,
+    chapterOrder: entry.chapterOrder,  // 必须传递
+  }))
+}
+```
+
 ### 侧边栏章节号显示
 
 `Sidebar.jsx` 中的 `buildSidebarSections` 使用 `item.chapterOrder` 生成侧边栏左侧的章节号徽章：
-- `practice.ipynb` 显示为 `1`, `2`, `3`...
+- `practice.ipynb` 显示为 `1`, `2`, `3`... `9`
 - `practice_extra.ipynb` 显示为 `4+`, `5+`...（带 + 号表示拓展）
 
 ### 添加新章节
 
-新增章节时，在 `CHAPTER_ORDER` 映射表中添加对应目录名和序号即可。未在映射表中的目录会排在最后（序号 999）。
+新增章节时，在 `CHAPTER_ORDER` 映射表中添加对应目录名和序号即可（使用下一个连续数字）。未在映射表中的目录会排在最后（序号 999）。
 
 ## 核心组件
 
@@ -125,8 +143,8 @@ const CHAPTER_ORDER = {
 - 使用 `import.meta.glob('../../../notebooks/**/*.ipynb', { query: '?raw', import: 'default' })` 动态加载
 - 嵌套路径正则匹配：`rootDir/([^/]+)/(.+?)\.ipynb$`
 - 计算 imageBase 路径用于图片 URL 重写
-- `CHAPTER_ORDER` 映射表控制章节排序
-- 每个条目包含 `chapterOrder` 字段供侧边栏使用
+- `CHAPTER_ORDER` 映射表控制章节排序（连续编号1-9，不按部分重置）
+- 每个条目包含 `chapterOrder` 字段，`getCatalog()` 必须传递此字段
 - 实现 Markdown 渲染（标题、列表、表格、引用、代码块）
 - 实现 Python 代码高亮
 - 实现 Notebook 单元格渲染（markdown cell, code cell, output）
@@ -267,7 +285,7 @@ cp -r ../notebooks/* ../docs/notebooks/
 6. **npm install**: 在 GitHub Actions 中使用 npm install 而非 npm ci，避免 package-lock.json 依赖问题
 7. **双部署策略**: 同时使用 actions/deploy-pages 和 peaceiris/actions-gh-pages，兼容不同的 Pages 源设置
 8. **force_orphan**: gh-pages 分支使用 orphan commit，不保留构建历史，保持仓库整洁
-9. **章节排序**: 使用 CHAPTER_ORDER 映射表显式控制章节顺序，不依赖 localeCompare 拼音排序
+9. **连续章节编号**: CHAPTER_ORDER 使用连续编号（1-9），第二部分不重置；getCatalog 必须传递 chapterOrder 字段
 
 ## 参考模板
 
