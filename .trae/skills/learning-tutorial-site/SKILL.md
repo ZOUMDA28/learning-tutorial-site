@@ -1,11 +1,17 @@
 ---
 name: "learning-tutorial-site"
-description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。支持两种模式：(1) 基于ipynb笔记本的教程网站，支持对照国外课程进一步改写；(2) 基于大学课程（斯坦福/MIT等）研究方向生成学术级教程网站。当用户需要创建在线教程/课程网站时调用。"
+description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。支持两种模式：(1) 基于ipynb笔记本的教程网站，支持对照国外课程进一步改写；(2) 基于大学课程（斯坦福/MIT等）研究方向生成学术级教程网站，默认中文，英文需告知。当用户需要创建在线教程/课程网站时调用。"
 ---
 
 # Learning Tutorial Site Generator
 
 基于 Jupyter Notebook 的交互式学习教程网站生成器，参考 modern-llm-notebook 项目模板构建。支持从自有 Notebook 或大学公开课程生成学术级教程网站。
+
+## 语言策略
+
+- **模式一**：跟随用户 Notebook 语言
+- **模式二**：**默认中文**生成所有 Notebook 和研读笔记。如需英文版本，用户须显式告知，届时生成 `notebooks-en/` 和 `NOTES.en.md` 英文镜像
+- **README**：项目同时提供中文 README.md 和英文 README.en.md 两个版本
 
 ## 两种工作模式
 
@@ -28,6 +34,8 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。
 
 ### 模式二：大学课程学术教程
 **用户给定研究方向和学习内容，自动生成基于大学公开课程的学术级教程网站。**
+
+**默认中文**：所有 Notebook、研读笔记、侧边栏、欢迎页均以中文生成。如需英文版本，用户须显式告知（如「也要英文版」），届时生成 `notebooks-en/` 英文镜像目录和 `NOTES.en.md` 英文研读笔记。
 
 核心要求：
 - **优先斯坦福**课程资源，其次 MIT、CMU、UC Berkeley 等顶尖美国大学
@@ -77,7 +85,7 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。
 **交叉对照示例：**
 
 | 主题 | 斯坦福主线 | MIT 对照 | CMU 对照 | Berkeley 对照 | 改写策略 |
-|------|-----------|---------|---------|--------------|----------|
+|------|-----------|---------|---------|--------------|------------|
 | Transformer | CS224N L5 | 6.S191 L3 | 11-711 | - | 以CS224N为主线，融入MIT的简洁实现 |
 | RL基础 | CS234 | - | 10-703 | CS285 | 以CS234为主线，融入CS285的实验设计 |
 | World Models | CS329A | 6.S191 | - | CS285 | 以CS329A为主线，融入CMU的理论推导 |
@@ -134,35 +142,41 @@ tutorial-site/
 │   └── part2-optimization-3d/
 ├── web/                 # React/Vite 前端
 ├── .github/workflows/
-└── README.md
+├── README.md            # 中文文档
+├── README.en.md         # 英文文档
+└── LICENSE
 ```
 
 ### 模式二结构（大学课程）
 
 ```
 university-course-site/
-├── notebooks/               # 教程笔记本（按课程结构组织）
-│   ├── part1-foundation/     # 第一部分：基础
+├── notebooks/               # 中文教程笔记本（默认）
+│   ├── part1-foundation/
 │   │   ├── lecture-01-intro/
 │   │   │   ├── practice.ipynb
-│   │   │   └── *.png         # matplotlib 图表
+│   │   │   └── *.png
 │   │   └── lecture-02-core/
 │   │       └── practice.ipynb
-│   ├── part2-advanced/       # 第二部分：进阶
-│   └── part3-frontiers/      # 第三部分：前沿
+│   ├── part2-advanced/
+│   └── part3-frontiers/
+├── notebooks-en/            # 英文镜像（仅在用户要求时生成）
+│   └── （与 notebooks/ 结构相同）
 ├── papers/                   # 论文研读笔记
 │   ├── lecture-01/
-│   │   ├── NOTES.md          # 中文研读笔记
-│   │   └── NOTES.en.md       # 英文研读笔记
+│   │   ├── NOTES.md          # 中文研读笔记（默认）
+│   │   └── NOTES.en.md       # 英文研读笔记（仅在用户要求时生成）
 │   └── lecture-02/
 │       └── ...
 ├── web/                      # React/Vite 前端（与模式一相同）
 ├── scripts/
-│   └── download_papers.py    # arXiv 论文下载脚本
-├── llm_client.py             # LLM 客户端（如需要）
+│   └── download_papers.py
+├── llm_client.py
 ├── .github/workflows/
 │   └── deploy.yml
-└── README.md
+├── README.md                # 中文文档
+├── README.en.md             # 英文文档
+└── LICENSE
 ```
 
 ---
@@ -240,7 +254,8 @@ _图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[Deep
 
 **论文研读笔记（papers/ 目录）：**
 - 每节课创建 `papers/lecture-XX/` 子目录
-- 包含 `NOTES.md`（中文研读笔记）和可选的 `NOTES.en.md`（英文）
+- 默认生成 `NOTES.md`（中文研读笔记）
+- 仅在用户要求英文版本时生成 `NOTES.en.md`（英文）
 - 研读笔记内容：论文核心思想、关键公式/算法、实验数字、教学主线、代码演示切入点
 - 可选：`scripts/download_papers.py` 脚本按 arXiv ID 下载论文 PDF
 
@@ -516,10 +531,11 @@ permissions:
 9. **连续章节编号**: CHAPTER_ORDER 使用连续编号，不按部分重置；getCatalog 必须传递 chapterOrder
 10. **学术严谨**: 每个知识点必须有论文出处，使用标准引用格式
 11. **代码作业**: 每篇 Notebook 必须有可运行代码和作业练习（含 assert 验证）
-12. **论文研读**: papers/ 目录记录每节课的论文研读笔记，含中英双语
+12. **论文研读**: papers/ 目录记录每节课的论文研读笔记
 13. **零依赖实现**: 核心算法从零实现，不使用封装库
 14. **可视化**: 每个核心概念配 matplotlib 图表或论文配图
 15. **多课程交叉对照**: 以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化，标注内容来源（模式一/二均支持）
+16. **语言策略**: 模式二默认中文生成，英文版本需用户显式要求；README 同时提供中英文两个版本
 
 ## 参考模板
 
