@@ -2,15 +2,21 @@
 
 基于 Jupyter Notebook 的交互式学习教程网站生成器。
 
-> 参考 [modern-llm-notebook](https://github.com/walkinglabs/modern-llm-notebook) 项目模板构建的 TRAE Skill
+> 参考 [modern-llm-notebook](https://github.com/walkinglabs/modern-llm-notebook) 项目模板构建的 TRAE Skill | [English](./README.en.md)
+
+## 语言策略
+
+- **模式一**：跟随用户 Notebook 语言
+- **模式二**：**默认中文**生成所有 Notebook 和研读笔记。如需英文版本，用户须显式告知，届时生成 `notebooks-en/` 和 `NOTES.en.md` 英文镜像
+- **README**：项目同时提供 [中文版](./README.md) 和 [英文版](./README.en.md)
 
 ## 两种工作模式
 
 ### 模式一：自有 Notebook 教程
-用户提供 .ipynb 笔记本，生成可浏览的网页教程。
+用户提供 .ipynb 笔记本，生成可浏览的网页教程。可选对照斯坦福等国外大学同类课程进一步改写优化。
 
 ### 模式二：大学课程学术教程
-用户给定研究方向和学习内容，自动基于大学公开课程（优先斯坦福，其次 MIT/CMU/Berkeley）生成学术级教程网站。
+用户给定研究方向和学习内容，自动基于大学公开课程（优先斯坦福，其次 MIT/CMU/Berkeley）生成学术级教程网站。**默认中文**，英文需用户要求。
 
 **核心要求：**
 - 学术严谨：每个知识点必须有论文出处，引用最新 arXiv 论文
@@ -18,6 +24,7 @@
 - 图片可视化：每个核心概念配 matplotlib 图表或论文配图
 - 论文研读：papers/ 目录记录每节课的论文研读笔记
 - 零依赖实现：核心算法从零实现，不使用封装库
+- 多课程交叉对照：以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化
 
 **参考标杆：**
 - [self-improving-agent-notebook](https://github.com/walkinglabs/self-improving-agent-notebook) - Stanford CS329A 课程模式
@@ -88,6 +95,8 @@ git clone https://github.com/ZOUMDA28/learning-tutorial-site.git
 - 「把 MIT 的 XXX 课程做成交互式教程」
 - 「我要一个关于 XXX 的学术教程，要有论文引用和代码作业」
 
+模式二默认生成中文内容。如需英文版本，请显式告知（如「也要英文版」），将自动生成 `notebooks-en/` 和 `NOTES.en.md` 英文镜像。
+
 ## 项目结构
 
 ### 模式一结构
@@ -95,57 +104,45 @@ git clone https://github.com/ZOUMDA28/learning-tutorial-site.git
 ```
 tutorial-site/
 ├── notebooks/                    # 教程笔记本
-│   ├── part1-image-processing/   # 第一部分
-│   │   ├── 数字图像的获取和表示/  # 子目录（支持嵌套）
+│   ├── part1-image-processing/
+│   │   ├── 数字图像的获取和表示/
 │   │   │   ├── practice.ipynb
-│   │   │   └── lena.jpeg         # 图片资源
+│   │   │   └── lena.jpeg
 │   │   └── 几何变换/
 │   │       └── practice.ipynb
-│   └── part2-optimization-3d/    # 第二部分
+│   └── part2-optimization-3d/
 ├── web/                          # React/Vite 前端网站
-│   ├── src/
-│   │   ├── components/           # React 组件
-│   │   ├── context/              # Context 状态管理
-│   │   ├── data/                 # 数据配置
-│   │   │   ├── notebooks.js      # Notebook 加载与渲染
-│   │   │   └── sidebar.js        # 侧边栏数据
-│   │   ├── hooks/                # 自定义 Hooks
-│   │   ├── styles/               # 全局样式
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-├── .github/workflows/           # GitHub Actions
-│   └── deploy.yml               # 自动部署工作流
-└── README.md
+├── .github/workflows/
+├── README.md                    # 中文文档
+├── README.en.md                 # 英文文档
+└── LICENSE
 ```
 
 ### 模式二结构（大学课程）
 
 ```
 university-course-site/
-├── notebooks/               # 教程笔记本（按课程结构组织）
-│   ├── part1-foundation/     # 第一部分：基础
+├── notebooks/               # 中文教程笔记本（默认）
+│   ├── part1-foundation/
 │   │   ├── lecture-01-intro/
 │   │   │   ├── practice.ipynb
-│   │   │   └── *.png         # matplotlib 图表
+│   │   │   └── *.png
 │   │   └── lecture-02-core/
 │   │       └── practice.ipynb
-│   ├── part2-advanced/       # 第二部分：进阶
-│   └── part3-frontiers/      # 第三部分：前沿
-├── papers/                   # 论文研读笔记
+│   ├── part2-advanced/
+│   └── part3-frontiers/
+├── notebooks-en/            # 英文镜像（仅在用户要求时生成）
+├── papers/
 │   ├── lecture-01/
-│   │   ├── NOTES.md          # 中文研读笔记
-│   │   └── NOTES.en.md       # 英文研读笔记
+│   │   ├── NOTES.md          # 中文研读笔记（默认）
+│   │   └── NOTES.en.md       # 英文研读笔记（仅在用户要求时生成）
 │   └── lecture-02/
-│       └── ...
-├── web/                      # React/Vite 前端（与模式一相同）
+├── web/
 ├── scripts/
-│   └── download_papers.py    # arXiv 论文下载脚本
 ├── .github/workflows/
-│   └── deploy.yml
-└── README.md
+├── README.md
+├── README.en.md
+└── LICENSE
 ```
 
 ## 教学契约
@@ -156,44 +153,19 @@ university-course-site/
 直觉理解 → 手算验证 → 代码实现 → 实验观察
 ```
 
-1. **直觉理解**：用通俗语言和类比解释核心概念
-2. **手算验证**：用小规模数据手动推导，再用代码验证
-3. **代码实现**：从零实现核心算法，不依赖封装库
-4. **实验观察**：用真实或合成数据运行实验，可视化结果
-
 每个 Notebook 必须包含：课程标题、导读、数学公式、可运行代码、matplotlib 图表、2-3 道作业（含 assert）、参考文献列表。
 
 ## 学术引用规范
 
-三种引用方式：
-
-```markdown
-<!-- 行内引用 -->
-[[Ha & Schmidhuber, 2018]](https://arxiv.org/abs/1803.10122)
-
-<!-- 图注引用 -->
-_图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[论文](链接)（2015），Figure 3。_
-
-<!-- 参考文献列表 -->
-## 参考文献
-1. **论文名** - 作者, 年份. [arXiv:ID](链接)
-```
+三种引用方式：行内引用 `[[作者, 年份]](arXiv链接)`、图注出处、参考文献列表。
 
 ## 嵌套目录支持
 
-Notebook 可以放在任意深度的子目录中。系统会自动：
-- 递归扫描所有 .ipynb 文件
-- 使用 `{子目录路径}-{文件名}` 作为唯一 ID
-- 从 Notebook 的第一个 markdown 一级标题提取标题
-- 重写 Markdown 中的相对图片路径
+Notebook 可以放在任意深度的子目录中。系统会自动递归扫描、生成唯一 ID、提取标题、重写图片路径。
 
 ## 章节排序
 
-侧边栏章节按正序（1, 2, 3... N）连续排列，不按部分重置。在 `notebooks.js` 中定义 `CHAPTER_ORDER` 映射表控制顺序。
-
-## 图片资源处理
-
-Markdown 中的相对图片路径会被自动重写为正确的绝对路径。部署时需将 notebooks 目录复制到构建输出目录。
+侧边栏章节按正序（1, 2, 3... N）连续排列，不按部分重置。
 
 ## 快速开始
 
@@ -219,27 +191,21 @@ npm run dev
 
 ## 自定义主题色
 
-修改 `web/src/styles/index.css` 中的 CSS 变量：
-
-```css
-:root {
-  --accent: #ea580c;           /* 主色调（橙色示例） */
-  --brand-gradient-from: ...;  /* 渐变起始色 */
-  --brand-gradient-to: ...;    /* 渐变结束色 */
-}
-```
+修改 `web/src/styles/index.css` 中的 CSS 变量。
 
 ## 最佳实践
 
-1. **教学契约**: 每篇 Notebook 遵循「直觉 → 手算 → 实现 → 实验」的学习路径
-2. **代码可读性**: 保持代码单元格短小，添加充分的中文注释
-3. **自包含**: 每篇 Notebook 应该可以独立运行
-4. **图片资源**: 图片放在 Notebook 同目录下，使用相对路径引用
-5. **固定种子**: 涉及随机实验时使用固定种子
-6. **npm install**: 在 GitHub Actions 中使用 npm install 而非 npm ci
-7. **学术严谨**: 每个知识点必须有论文出处，使用标准引用格式
-8. **代码作业**: 每篇 Notebook 必须有可运行代码和作业练习
-9. **连续章节编号**: CHAPTER_ORDER 使用连续编号，不按部分重置
+1. 教学契约：直觉 → 手算 → 实现 → 实验
+2. 代码可读性：短小精炼，充分中文注释
+3. 自包含：每篇 Notebook 独立可运行
+4. 图片资源：同目录，相对路径引用
+5. 固定种子：确保可复现
+6. npm install：GitHub Actions 中使用 npm install
+7. 学术严谨：每个知识点有论文出处
+8. 代码作业：每篇 Notebook 有代码和作业
+9. 连续章节编号：不按部分重置
+10. 多课程交叉对照：斯坦福优先，对照 MIT/CMU/Berkeley 改写
+11. 语言策略：模式二默认中文，英文需显式要求
 
 ## 参考项目
 
