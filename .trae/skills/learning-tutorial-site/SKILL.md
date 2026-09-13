@@ -1,11 +1,28 @@
 ---
 name: "learning-tutorial-site"
-description: "基于 Jupyter Notebook 的交互式学习教程网站生成器，参考 modern-llm-notebook 模板。当用户需要创建 Notebook 形式的在线教程/课程网站时调用。"
+description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。支持两种模式：(1) 基于 ipynb 笔记本的教程网站，(2) 基于大学课程（斯坦福/MIT等）研究方向生成学术级教程网站。当用户需要创建在线教程/课程网站时调用。"
 ---
 
 # Learning Tutorial Site Generator
 
-基于 Jupyter Notebook 的交互式学习教程网站生成器，参考 modern-llm-notebook 项目模板构建。
+基于 Jupyter Notebook 的交互式学习教程网站生成器，参考 modern-llm-notebook 项目模板构建。支持从自有 Notebook 或大学公开课程生成学术级教程网站。
+
+## 两种工作模式
+
+### 模式一：自有 Notebook 教程
+用户提供 .ipynb 笔记本，生成可浏览的网页教程。适用于已有教学材料的情况。
+
+### 模式二：大学课程学术教程
+**用户给定研究方向和学习内容，自动生成基于大学公开课程的学术级教程网站。**
+
+核心要求：
+- **优先斯坦福**课程资源，其次 MIT、CMU、UC Berkeley 等顶尖美国大学
+- **学术严谨**：每个知识点必须有论文出处，引用最新相关论文
+- **代码作业**：不只理论，每篇 Notebook 必须有可运行的代码实现和作业练习
+- **图片可视化**：每个核心概念配 matplotlib 生成的图表或论文配图
+- **模板一致**：使用与模式一相同的 React + Vite 前端模板
+
+---
 
 ## 何时使用
 
@@ -14,6 +31,8 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器，
 - 将 .ipynb 笔记本转化为可浏览的网页教程
 - 需要中英双语支持的学习平台
 - 构建带有代码高亮、数学公式、笔记功能的教程网站
+- **基于研究方向生成大学课程级别的学术教程**（新模式）
+- **将斯坦福/MIT等公开课程做成可交互的教程网站**（新模式）
 
 ## 技术栈
 
@@ -25,32 +44,208 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器，
 
 ## 项目结构
 
+### 模式一结构（自有 Notebook）
+
 ```
 tutorial-site/
-├── notebooks/           # 教程笔记本（.ipynb 文件）
-│   ├── part1-image-processing/    # 第一部分
-│   │   ├── 数字图像的获取和表示/   # 子目录（支持嵌套）
+├── notebooks/           # 教程笔记本
+│   ├── part1-image-processing/
+│   │   ├── 数字图像的获取和表示/
 │   │   │   ├── practice.ipynb
-│   │   │   └── lena.jpeg          # 图片资源
+│   │   │   └── lena.jpeg
 │   │   └── 几何变换/
 │   │       └── practice.ipynb
-│   └── part2-optimization-3d/     # 第二部分
-├── web/                 # React/Vite 前端网站
-│   ├── src/
-│   │   ├── components/  # React 组件
-│   │   ├── context/     # Context 状态管理
-│   │   ├── data/        # 数据配置
-│   │   ├── hooks/       # 自定义 Hooks
-│   │   ├── styles/      # 全局样式
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-├── .github/workflows/   # GitHub Actions 部署
+│   └── part2-optimization-3d/
+├── web/                 # React/Vite 前端
+├── .github/workflows/
+└── README.md
+```
+
+### 模式二结构（大学课程）
+
+```
+university-course-site/
+├── notebooks/               # 教程笔记本（按课程结构组织）
+│   ├── part1-foundation/     # 第一部分：基础
+│   │   ├── lecture-01-intro/
+│   │   │   ├── practice.ipynb
+│   │   │   └── *.png         # matplotlib 图表
+│   │   └── lecture-02-core/
+│   │       └── practice.ipynb
+│   ├── part2-advanced/       # 第二部分：进阶
+│   └── part3-frontiers/      # 第三部分：前沿
+├── papers/                   # 论文研读笔记
+│   ├── lecture-01/
+│   │   ├── NOTES.md          # 中文研读笔记
+│   │   └── NOTES.en.md       # 英文研读笔记
+│   └── lecture-02/
+│       └── ...
+├── web/                      # React/Vite 前端（与模式一相同）
+├── scripts/
+│   └── download_papers.py    # arXiv 论文下载脚本
+├── llm_client.py             # LLM 客户端（如需要）
+├── .github/workflows/
 │   └── deploy.yml
 └── README.md
 ```
+
+---
+
+## 模式二：大学课程学术教程生成指南
+
+### 1. 课程调研与结构设计
+
+**优先级排序：**
+1. **斯坦福大学**（Stanford）- CS 系列、AI/ML/RL/Robotics 课程
+2. **MIT**（Massachusetts Institute of Technology）- 6.S 系列
+3. **CMU**（Carnegie Mellon University）- 10/15/16 系列
+4. **UC Berkeley**（University of California, Berkeley）- CS 系列
+5. 其他顶尖美国大学的公开课程
+
+**调研步骤：**
+1. 根据用户给定的研究方向，搜索相关大学课程
+2. 找到课程大纲（syllabus）、课程计划（schedule）、阅读清单（reading list）
+3. 梳理课程的知识主线，确定章节划分
+4. 收集每节课对应的论文（优先 arXiv 链接）
+5. 设计 Notebook 结构，确保代码+理论平衡
+
+**课程结构设计原则：**
+- 按课程大纲分为 3-5 个部分（Part）
+- 每个部分包含 3-6 节课（Lecture）
+- 每节课对应 1 个 practice.ipynb（主练习）
+- 可选 1 个 practice_extra.ipynb（拓展练习）
+- 总计 10-20 个 Notebook
+
+### 2. 教学契约（Teaching Contract）
+
+**每篇 Notebook 必须遵循四步教学路径：**
+
+```
+直觉理解 → 手算验证 → 代码实现 → 实验观察
+```
+
+1. **直觉理解**（Markdown）：用通俗语言和类比解释核心概念
+2. **手算验证**（Markdown + Code）：用小规模数据手动推导，再用代码验证
+3. **代码实现**（Code Cell）：从零实现核心算法，不依赖封装库
+4. **实验观察**（Code + Output）：用真实或合成数据运行实验，可视化结果
+
+**每个 Notebook 必须包含：**
+- 课程标题和章节号（第一个 markdown cell 为 `# 标题`）
+- 导读段落（介绍本节学习目标）
+- 核心概念的数学公式（LaTeX）
+- 可运行的 Python 代码块
+- matplotlib 或其他可视化图表
+- 2-3 道作业练习（含 assert 验证）
+- 参考文献列表（含 arXiv 链接）
+
+### 3. 学术引用规范
+
+**论文引用格式（三种方式）：**
+
+方式一（行内引用，适用于正文中提及）：
+```markdown
+[[Ha & Schmidhuber, 2018]](https://arxiv.org/abs/1803.10122)
+```
+
+方式二（图注引用，适用于图片出处）：
+```markdown
+_图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[Deep Recurrent Q-Learning](https://arxiv.org/abs/1507.06527)（2015），Figure 3。_
+```
+
+方式三（参考文献列表，放在 Notebook 末尾）：
+```markdown
+## 参考文献
+
+1. **ReAct: Synergizing Reasoning and Acting in Language Models** - Yao et al., 2022. [arXiv:2210.03629](https://arxiv.org/abs/2210.03629)
+2. **STaR: Self-Taught Reasoner** - Zelikman et al., 2022. [arXiv:2203.14465](https://arxiv.org/abs/2203.14465)
+```
+
+**论文研读笔记（papers/ 目录）：**
+- 每节课创建 `papers/lecture-XX/` 子目录
+- 包含 `NOTES.md`（中文研读笔记）和可选的 `NOTES.en.md`（英文）
+- 研读笔记内容：论文核心思想、关键公式/算法、实验数字、教学主线、代码演示切入点
+- 可选：`scripts/download_papers.py` 脚本按 arXiv ID 下载论文 PDF
+
+### 4. 代码要求
+
+**零依赖原则：**
+- 核心算法从零实现，不使用 LangChain、transformers 等封装库
+- 仅依赖基础库：numpy, matplotlib, torch（如需深度学习）
+- 每个代码块短小精炼（<50行），添加充分中文注释
+
+**作业与验证：**
+- 每篇 Notebook 末尾含 2-3 道作业练习
+- 代码含 `assert` 语句保证正确性
+- 作业应覆盖：概念理解、代码实现、实验分析
+
+**实验可复现：**
+- 使用固定随机种子（`np.random.seed(42)`, `torch.manual_seed(42)`）
+- 每个 Notebook 独立可运行，不依赖前面的状态
+
+### 5. 图片与可视化要求
+
+**图表类型：**
+- matplotlib 生成的图表（曲线图、柱状图、散点图、热力图）
+- 算法流程图（可用 matplotlib 或文本图示）
+- 架构示意图（可用 matplotlib patches 或 PIL 绘制）
+- 实验结果对比图
+
+**图片规范：**
+- 图片放在 Notebook 同目录下
+- 使用相对路径引用（`![描述](figure.png)`）
+- 每张图片必须有中文图注说明
+- 引用论文图片时标注出处
+
+**matplotlib 示例：**
+```python
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
+matplotlib.rcParams['axes.unicode_minus'] = False
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+ax.plot(x, y, label='训练奖励', color='#ea580c', linewidth=2)
+ax.set_xlabel('训练步数')
+ax.set_ylabel('奖励')
+ax.set_title('PPO 训练曲线')
+ax.legend()
+plt.tight_layout()
+plt.savefig('training_curve.png', dpi=150, bbox_inches='tight')
+plt.show()
+```
+
+### 6. 前沿论文集成
+
+**如何找到最新相关论文：**
+1. 搜索 arXiv（使用 WebSearch 工具）
+2. 查看顶会论文（NeurIPS, ICML, ICLR, CVPR, RSS, CoRL）
+3. 参考大学课程的阅读清单
+4. 关注 Google Scholar 引用网络
+
+**论文到 Notebook 的转化流程：**
+1. 阅读论文，提取核心算法/公式/实验
+2. 在 `papers/lecture-XX/NOTES.md` 中记录研读笔记
+3. 将论文核心算法转化为可运行的 Python 代码
+4. 用小规模数据验证算法正确性
+5. 可视化关键结果
+6. 在 Notebook 末尾列出参考文献
+
+### 7. 参考模板
+
+以下三个仓库是本模式的标杆参考：
+
+| 仓库 | 特点 | 课程来源 |
+|------|------|---------|
+| [self-improving-agent-notebook](https://github.com/walkinglabs/self-improving-agent-notebook) | 17个可运行Notebook，论文研读笔记，零依赖实现 | Stanford CS329A |
+| [hands-on-world-models](https://github.com/walkinglabs/hands-on-world-models) | 10章57页，LaTeX图注，arXiv引用 | 原创 |
+| [hands-on-modern-rl](https://github.com/walkinglabs/hands-on-modern-rl) | 26章，VitePress，GIF/SVG图，PDF构建 | 原创 |
+
+**从这些模板中学习的关键模式：**
+- CS329A 模板：论文→代码的转化流程，papers/ 目录，研读笔记
+- World Models 模板：`[[作者, 年份]](链接)` 引用格式，图注出处
+- Modern RL 模板：章节+附录结构，GIF/SVG/WEBP 多媒体，TikZ→SVG
+
+---
 
 ## 嵌套目录支持
 
@@ -60,38 +255,34 @@ Notebook 可以放在任意深度的子目录中。系统会自动：
 - 从 Notebook 的第一个 markdown 一级标题提取标题
 - 重写 Markdown 中的相对图片路径，指向正确的资源位置
 
-例如 `part1-image-processing/数字图像的获取和表示/practice.ipynb` 的 ID 为 `数字图像的获取和表示-practice`。
+例如 `part1-foundation/lecture-01-intro/practice.ipynb` 的 ID 为 `lecture-01-intro-practice`。
 
 ## 图片资源处理
 
 Markdown 单元格中的相对图片路径会被自动重写：
-- 原始路径 `![lena](lena.jpeg)`
-- 重写为 `<img src="./notebooks/part1-image-processing/数字图像的获取和表示/lena.jpeg">`
+- 原始路径 `![训练曲线](training_curve.png)`
+- 重写为 `<img src="./notebooks/part1-foundation/lecture-01-intro/training_curve.png">`
 - 绝对 URL 和 data: URI 不受影响
 
 部署时需要将 notebooks 目录复制到构建输出目录（docs/notebooks/），使图片可访问。
 
 ## 章节排序与编号
 
-侧边栏中的章节按正序（1, 2, 3... 9）连续排列，**不按部分重置**。
+侧边栏中的章节按正序（1, 2, 3... N）连续排列，不按部分重置。
 
 ### 排序机制
 
-在 `notebooks.js` 中定义 `CHAPTER_ORDER` 映射表，使用连续编号（1-9），第二部分不重置：
+在 `notebooks.js` 中定义 `CHAPTER_ORDER` 映射表，使用连续编号：
 
 ```javascript
 const CHAPTER_ORDER = {
-  // 图像处理基础（第1-6章）
-  '数字图像的获取和表示': 1,
-  '颜色空间的转换': 2,
-  '基于直方图统计的处理': 3,
-  '图像滤波': 4,
-  '特征提取': 5,
-  '几何变换': 6,
-  // 最优化与立体视觉（第7-9章，连续编号不重置）
-  '图像拼接模型': 7,
-  '相机参数标定': 8,
-  '立体视觉点云重建': 9,
+  // 第一部分（第1-5章）
+  'lecture-01-intro': 1,
+  'lecture-02-core': 2,
+  ...
+  // 第二部分（第6-10章，连续编号不重置）
+  'lecture-06-advanced': 6,
+  ...
 }
 ```
 
@@ -111,15 +302,15 @@ export function getCatalog() {
     title: entry.title,
     part,
     partDir: entry.partDir,
-    chapterOrder: entry.chapterOrder,  // 必须传递
+    chapterOrder: entry.chapterOrder,
   }))
 }
 ```
 
 ### 侧边栏章节号显示
 
-`Sidebar.jsx` 中的 `buildSidebarSections` 使用 `item.chapterOrder` 生成侧边栏左侧的章节号徽章：
-- `practice.ipynb` 显示为 `1`, `2`, `3`... `9`
+`Sidebar.jsx` 中的 `buildSidebarSections` 使用 `item.chapterOrder` 生成章节号徽章：
+- `practice.ipynb` 显示为 `1`, `2`, `3`... 
 - `practice_extra.ipynb` 显示为 `4+`, `5+`...（带 + 号表示拓展）
 
 ### 添加新章节
@@ -143,7 +334,7 @@ export function getCatalog() {
 - 使用 `import.meta.glob('../../../notebooks/**/*.ipynb', { query: '?raw', import: 'default' })` 动态加载
 - 嵌套路径正则匹配：`rootDir/([^/]+)/(.+?)\.ipynb$`
 - 计算 imageBase 路径用于图片 URL 重写
-- `CHAPTER_ORDER` 映射表控制章节排序（连续编号1-9，不按部分重置）
+- `CHAPTER_ORDER` 映射表控制章节排序（连续编号1-N，不按部分重置）
 - 每个条目包含 `chapterOrder` 字段，`getCatalog()` 必须传递此字段
 - 实现 Markdown 渲染（标题、列表、表格、引用、代码块）
 - 实现 Python 代码高亮
@@ -173,7 +364,7 @@ export function getCatalog() {
 
 ```css
 :root {
-  --accent: #ea580c;                    /* 主色调 */
+  --accent: #ea580c;
   --accent-soft: rgba(234, 88, 12, 0.09);
   --brand-gradient-from: rgba(234, 88, 12, 0.11);
   --brand-gradient-to: rgba(251, 146, 60, 0.12);
@@ -201,92 +392,59 @@ export function getCatalog() {
 
 ```yaml
 permissions:
-  contents: write    # 写权限：推送构建产物到 gh-pages 分支
-  pages: write       # 写权限：通过 actions/deploy-pages 部署
-  id-token: write    # OIDC 认证
+  contents: write
+  pages: write
+  id-token: write
 ```
 
 ### 关键步骤
 
-1. 递归复制中文目录到 notebooks 结构：
-```bash
-cp -r ../图像处理基础/* ../notebooks/part1-image-processing/
-cp -r ../最优化算法与立体视觉重建/* ../notebooks/part2-optimization-3d/
-```
-
-2. 安装依赖（使用 npm install，非 npm ci）：
-```bash
-cd web && npm install
-```
-
-3. 构建：
-```bash
-npm run build
-```
-
-4. 复制 notebook 资源（图片等）到构建输出：
-```bash
-mkdir -p ../docs/notebooks
-cp -r ../notebooks/* ../docs/notebooks/
-```
-
-5. 部署方式 A：通过 GitHub Actions 部署（需要 Pages 源设为 GitHub Actions）：
-```yaml
-- uses: actions/upload-pages-artifact@v3
-  with:
-    path: docs
-- uses: actions/deploy-pages@v4
-  continue-on-error: true
-```
-
-6. 部署方式 B：推送到 gh-pages 分支（需要 Pages 源设为 Deploy from a branch → gh-pages）：
-```yaml
-- uses: peaceiris/actions-gh-pages@v4
-  with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
-    publish_dir: docs
-    force_orphan: true
-```
+1. 递归复制中文目录到 notebooks 结构
+2. 安装依赖（使用 npm install，非 npm ci）
+3. 构建：`npm run build`
+4. 复制 notebook 资源（图片等）到构建输出
+5. 部署方式 A：actions/deploy-pages（Pages 源 = GitHub Actions）
+6. 部署方式 B：peaceiris/actions-gh-pages（Pages 源 = gh-pages 分支）
 
 ### GitHub Pages 源设置
 
-部署后需要在仓库 Settings → Pages 中配置源（二选一）：
-
 **选项 A（推荐）**：Source = GitHub Actions
-- 直接使用 actions/deploy-pages 的部署
-
-**选项 B**：Source = Deploy from a branch
-- Branch: `gh-pages`
-- Folder: `/` (root)
-- 使用 peaceiris/actions-gh-pages 推送到 gh-pages 分支的内容
-
-两种方式构建产物相同，区别仅在于 GitHub Pages 如何提供文件。
+**选项 B**：Source = Deploy from a branch → gh-pages → / (root)
 
 ## Notebook 组织规范
 
 教程按部分组织，每个部分一个顶层文件夹：
-- `part1-image-processing/` - 图像处理基础
-- `part2-optimization-3d/` - 最优化与立体视觉
+- `part1-foundation/` - 基础
+- `part2-advanced/` - 进阶
+- `part3-frontiers/` - 前沿
 
 每个部分内可以有子目录，每个子目录包含：
 - `practice.ipynb` - 主练习 Notebook
 - `practice_extra.ipynb` - 拓展练习（可选）
-- 图片资源文件（.jpg, .png, .jpeg）
+- 图片资源文件（.png, .jpg, .svg）
 
 确保每个 Notebook 的第一个 markdown cell 是一级标题（# 标题），用于自动提取显示名称。
 
 ## 最佳实践
 
-1. **Notebook 结构**: 每篇 Notebook 遵循「直觉 → 手算 → 实现 → 实验」的学习路径
-2. **代码可读性**: 保持代码单元格短小，添加充分的注释
+1. **教学契约**: 每篇 Notebook 遵循「直觉 → 手算 → 实现 → 实验」的学习路径
+2. **代码可读性**: 保持代码单元格短小，添加充分的中文注释
 3. **自包含**: 每篇 Notebook 应该可以独立运行，不依赖前面的状态
 4. **图片资源**: 图片放在 Notebook 同目录下，使用相对路径引用
 5. **固定种子**: 涉及随机实验时使用固定种子，确保可复现
-6. **npm install**: 在 GitHub Actions 中使用 npm install 而非 npm ci，避免 package-lock.json 依赖问题
-7. **双部署策略**: 同时使用 actions/deploy-pages 和 peaceiris/actions-gh-pages，兼容不同的 Pages 源设置
-8. **force_orphan**: gh-pages 分支使用 orphan commit，不保留构建历史，保持仓库整洁
-9. **连续章节编号**: CHAPTER_ORDER 使用连续编号（1-9），第二部分不重置；getCatalog 必须传递 chapterOrder 字段
+6. **npm install**: 在 GitHub Actions 中使用 npm install 而非 npm ci
+7. **双部署策略**: 同时使用 actions/deploy-pages 和 peaceiris/actions-gh-pages
+8. **force_orphan**: gh-pages 分支使用 orphan commit，不保留构建历史
+9. **连续章节编号**: CHAPTER_ORDER 使用连续编号，不按部分重置；getCatalog 必须传递 chapterOrder
+10. **学术严谨**: 每个知识点必须有论文出处，使用标准引用格式
+11. **代码作业**: 每篇 Notebook 必须有可运行代码和作业练习（含 assert 验证）
+12. **论文研读**: papers/ 目录记录每节课的论文研读笔记，含中英双语
+13. **零依赖实现**: 核心算法从零实现，不使用封装库
+14. **可视化**: 每个核心概念配 matplotlib 图表或论文配图
 
 ## 参考模板
 
-本 skill 基于 [modern-llm-notebook](https://github.com/walkinglabs/modern-llm-notebook) 项目模板。
+- [modern-llm-notebook](https://github.com/walkinglabs/modern-llm-notebook) - 前端模板基础
+- [self-improving-agent-notebook](https://github.com/walkinglabs/self-improving-agent-notebook) - Stanford CS329A 课程模式
+- [hands-on-world-models](https://github.com/walkinglabs/hands-on-world-models) - 学术引用规范
+- [hands-on-modern-rl](https://github.com/walkinglabs/hands-on-modern-rl) - 章节结构与可视化
