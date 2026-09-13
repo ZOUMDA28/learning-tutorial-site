@@ -1,6 +1,6 @@
 ---
 name: "learning-tutorial-site"
-description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。支持两种模式：(1) 基于ipynb笔记本的教程网站，(2) 基于大学课程（斯坦福/MIT等）研究方向生成学术级教程网站，支持多课程交叉对照改写。当用户需要创建在线教程/课程网站时调用。"
+description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。支持两种模式：(1) 基于ipynb笔记本的教程网站，支持对照国外课程进一步改写；(2) 基于大学课程（斯坦福/MIT等）研究方向生成学术级教程网站。当用户需要创建在线教程/课程网站时调用。"
 ---
 
 # Learning Tutorial Site Generator
@@ -11,6 +11,20 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。
 
 ### 模式一：自有 Notebook 教程
 用户提供 .ipynb 笔记本，生成可浏览的网页教程。适用于已有教学材料的情况。
+
+**可选：对照国外课程进一步改写**
+
+用户如有需要，可以对照斯坦福、MIT、CMU、UC Berkeley 等国外大学同类课程的公开内容，对自有 Notebook 进行进一步改写优化：
+
+1. **对照课程选取**：根据 Notebook 主题，搜索斯坦福等大学的同类课程（如 CS224N、CS231N、CS234、CS329A 等），获取课程大纲、讲义、阅读清单
+2. **逐篇对照分析**：将用户 Notebook 与课程对应章节对比，识别可补充和改进的知识点
+3. **改写优化**：
+   - 补充课程中更深入的理论推导（如 MIT 的数学推导风格）
+   - 融入课程中更直观的实验设计（如 Berkeley 的实验驱动风格）
+   - 增加课程中涉及但用户 Notebook 缺少的前沿论文引用
+   - 标注内容来源（如「本节理论推导参考 Stanford CS224N Lecture 5」）
+4. **保持用户内容主体**：改写以用户原有 Notebook 为主线，对照课程为补充和优化，不喧宾夺主
+5. **斯坦福优先**：对照课程选择优先级为 斯坦福 > MIT > CMU > UC Berkeley
 
 ### 模式二：大学课程学术教程
 **用户给定研究方向和学习内容，自动生成基于大学公开课程的学术级教程网站。**
@@ -94,7 +108,7 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。
 - 构建带有代码高亮、数学公式、笔记功能的教程网站
 - **基于研究方向生成大学课程级别的学术教程**（模式二）
 - **复刻斯坦福等大学公开课程为交互式教程**（模式二）
-- **对照多所大学同类课程进行交叉改写优化**（模式二）
+- **对照多所大学同类课程进行交叉改写优化**（模式一/二均支持）
 
 ## 技术栈
 
@@ -299,7 +313,7 @@ plt.show()
 以下三个仓库是本模式的标杆参考：
 
 | 仓库 | 特点 | 课程来源 |
-|------|------|---------|
+|------|------|----------|
 | [self-improving-agent-notebook](https://github.com/walkinglabs/self-improving-agent-notebook) | 17个可运行Notebook，论文研读笔记，零依赖实现 | Stanford CS329A |
 | [hands-on-world-models](https://github.com/walkinglabs/hands-on-world-models) | 10章57页，LaTeX图注，arXiv引用 | 原创 |
 | [hands-on-modern-rl](https://github.com/walkinglabs/hands-on-modern-rl) | 26章，VitePress，GIF/SVG图，PDF构建 | 原创 |
@@ -505,7 +519,7 @@ permissions:
 12. **论文研读**: papers/ 目录记录每节课的论文研读笔记，含中英双语
 13. **零依赖实现**: 核心算法从零实现，不使用封装库
 14. **可视化**: 每个核心概念配 matplotlib 图表或论文配图
-15. **多课程交叉对照**: 以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化，标注内容来源
+15. **多课程交叉对照**: 以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化，标注内容来源（模式一/二均支持）
 
 ## 参考模板
 
