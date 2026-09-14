@@ -1,11 +1,38 @@
 ---
 name: "learning-tutorial-site"
-description: "基于 Jupyter Notebook 的交互式学习教程网站生成器。支持两种模式：(1) 基于ipynb笔记本的教程网站，支持对照国外课程进一步改写；(2) 基于大学课程（斯坦福/MIT等）研究方向生成学术级教程网站，默认中文，英文需告知。当用户需要创建在线教程/课程网站时调用。"
+description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（React+Vite+KaTeX），含前端样式对账与渲染体检。两种模式：(1) 自有 ipynb 教程网站，可对照国外课程改写；(2) 按研究方向生成大学课程级学术教程。默认中文，英文需告知。当用户要创建/修改在线教程或课程网站时调用。"
 ---
 
 # Learning Tutorial Site Generator
 
 基于 Jupyter Notebook 的交互式学习教程网站生成器，参考 modern-llm-notebook 项目模板构建。支持从自有 Notebook 或大学公开课程生成学术级教程网站。
+
+## 强制第一步：先对照参考网站（每次做/改网站都必须执行）
+
+**任何"做网站 / 改网站"的任务，动手之前必须先打开参考项目，把它当作格式基准。**
+
+| 参考 | 位置 | 用途 |
+|------|------|------|
+| modern-llm-notebook | `modern-llm-notebook/web/`（本地优先，其次 GitHub） | 前端组件、设计系统 CSS、构建与部署配置的唯一基准 |
+
+**动手前的必读清单（逐项打开确认）**：
+
+1. `web/src/styles/index.css` —— 完整设计系统（CSS 变量 + 全部自定义类 + KaTeX 与字体 `@import`）；
+2. `web/src/components/` —— 组件清单（注意 GuidedTour / ChangelogModal 这类容易漏掉的组件）；
+3. `web/index.html` —— 字体的 preconnect 与样式表、MathJax/KaTeX 的引入方式；
+4. `web/vite.config.js` —— 虚拟模块插件、`base: './'`、构建输出目录；
+5. `.github/workflows/` —— 部署方式与 GitHub Pages 源设置。
+
+**规则**：
+
+- **不得凭印象重写样式或组件**。样式一律以参考项目的 `index.css` 为准；需要换主题色时只做
+  「CSS 变量覆盖 + 组件内字面颜色类映射」，不要重写设计系统。
+- 参考项目已有的组件与样式**不要自行裁剪**；确需删减时，必须跑「样式完整性对账」脚本确认 0 缺失。
+- 每次接到网站任务，先明确说出"我参考的是哪个项目、读了哪几个文件"，再动手。
+- 参考项目不可得时，先向用户确认模板来源，**不要自行发明结构**。
+
+> 这条规则来自真实事故：曾因把 `index.css` 裁成空壳，造成 93 个样式类与 10 个 CSS 变量缺失，
+> 页面大面积失去样式并反复返工。
 
 ## 语言策略
 
@@ -528,6 +555,258 @@ Path("notebooks/part1-xxx/01-topic.ipynb").write_text(
 
 ---
 
+## 前端样式与渲染排错（实战经验，必读）
+
+以下每一条都来自真实项目事故，按「症状 → 根因 → 处理」给出。
+
+### 1. 样式完整性对账（移植或精简 CSS 后必做）
+
+**症状**：页面"看起来不对"——侧栏、右侧大纲、笔记面板、图片灯箱等元素像完全没上样式。
+
+**根因**：组件（Sidebar / NotebookViewer / NotesPanel / Welcome …）是按参考模板的设计系统写的。
+一旦 `styles/index.css` 被裁剪成空壳（只剩 `@import "tailwindcss"` 与几个变量），
+组件用到的自定义类与 CSS 变量就大面积为空，元素失去全部样式。
+
+**必须跑到 0 缺失**（缺失类 0，缺失变量 0 或都有兜底值）：
+
+```python
+import re
+from pathlib import Path
+
+REF, OUR = Path('参考模板/web/src'), Path('web/src')   # 设计系统来源 / 本项目
+
+def classes_in_css(p):
+    return set(re.findall(r'\.([A-Za-z_][\w-]*)', p.read_text(encoding='utf-8', errors='ignore')))
+
+def used_classes(d):
+    used = set()
+    for f in d.rglob('*.jsx'):
+        txt = f.read_text(encoding='utf-8', errors='ignore')
+        for m in re.finditer(r'className=(?:"([^"]*)"|\{`([^`]*)`\})', txt):
+            for tok in re.split(r'[\s${}]+', m.group(1) or m.group(2) or ''):
+                if re.fullmatch(r'[a-z][\w-]*', tok):
+                    used.add(tok)
+    return used
+
+our_css, ref_css = classes_in_css(OUR / 'styles/index.css'), classes_in_css(REF / 'styles/index.css')
+print('参考有、我们缺:', sorted(c for c in used_classes(OUR) if c in ref_css and c not in our_css))
+
+def defined_vars(p):
+    return set(re.findall(r'(--[\w-]+)\s*:', p.read_text(encoding='utf-8', errors='ignore')))
+
+used_vars = set()
+for f in OUR.rglob('*.jsx'):
+    used_vars |= set(re.findall(r'var\((--[\w-]+)', f.read_text(encoding='utf-8', errors='ignore')))
+print('变量缺失:', sorted(v for v in used_vars if v not in defined_vars(OUR / 'styles/index.css')))
+```
+
+**结论**：宁可**完整移植**参考模板的 `index.css`（通常 2500+ 行，含设计系统与 KaTeX），
+也不要手工裁剪；裁剪后必须用上面的脚本对账。典型缺失包括 `.viewer`、`.toc-*`、
+`.sidebar-*`、`.notes-*`、`.modal-*`、`.brand-*`、`.image-lightbox` 以及
+`--bg-sidebar`、`--text-primary`、`--bg-active`、`--border-light` 等变量。
+
+### 2. KaTeX 样式必须随包内置
+
+不要用 CDN 的 `<link>` 加载 KaTeX CSS——受限网络下公式会**整体失去样式**。
+在入口 CSS 里 `@import`，Vite 会把 woff2 字体一并打进产物：
+
+```css
+/* web/src/styles/index.css */
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+```
+
+校验：构建产物目录里应出现 `KaTeX_*.woff2`，且 `index.html` 中不再有 katex CDN 链接。
+
+### 2b. Welcome 页的数学公式用 MathJax（按需）
+
+Notebook 正文的公式由 **KaTeX** 在构建期渲染；而首页/欢迎页若需要写公式，
+参考模板的做法是在 `index.html` 里配置 **MathJax**（`startup.typeset = false`，按需触发）：
+
+```html
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']], processEscapes: true },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  startup: { typeset: false }
+}
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+```
+
+**权衡**：MathJax 走 CDN 会在受限网络下失效。若欢迎页确实没有公式，**就不要引入它**（少一个外部依赖）；
+若需要公式且要求离线可用，改为把 MathJax 作为 npm 依赖打包进产物。
+
+### 3. 自定义 Markdown 渲染器的四条硬约束
+
+前端自行实现了 Markdown 渲染（`data/notebooks.js`），它比标准 Markdown 严格：
+
+| 约束 | 说明 | 违反后果 |
+|------|------|----------|
+| 表格分隔行**至少 3 个短横线** | 判定用 `/^:?-{3,}:?$/`，`\|:--:\|` 只有 2 个 | 整张表格渲染失败，页面显示裸的 `\| a \| b \|` 文本 |
+| 表格与引用**逐行**解析 | 行内语法不能跨行 | `**加粗**` 跨行断开 → 显示字面 `**` |
+| 需显式支持 `\*` `\_` 转义 | 未实现时反斜杠原样输出 | 标题显示成 `CIEL\a\b\*` |
+| 图片相对路径按 `BASE_URL + notebooks/<partDir>/<dir>/` 重写 | 不要写 `images/xxx.png`，除非该目录真实存在 | 插图 404 |
+
+**批量自检**（写完所有 Notebook 后跑一次，应为 0 问题）：
+
+```python
+import json, os, re
+from pathlib import Path
+SEP = re.compile(r'^:?-{3,}:?$')
+for root, _, files in os.walk('notebooks'):
+    for f in files:
+        if not f.endswith('.ipynb'):
+            continue
+        nb = json.loads((Path(root) / f).read_text(encoding='utf-8'))
+        for i, c in enumerate(nb['cells']):
+            if c['cell_type'] != 'markdown':
+                continue
+            text = ''.join(c['source'])
+            if text.count('$$') % 2:
+                print('$$ 未配对', root, i)
+            for blk in re.findall(r'(?:^\|.*\n)+', text, re.M):
+                rows = blk.strip().split('\n')
+                if len(rows) < 2:
+                    continue
+                cells = [x.strip() for x in rows[1].strip().strip('|').split('|')]
+                if not all(SEP.match(x) for x in cells):
+                    print('分隔行不合规', root, i, cells)
+```
+
+### 4. 页面标题不要重复
+
+`NotebookViewer` 顶部已渲染 `meta.title`（该标题正是从 Notebook 第一个 `# 一级标题` 提取的）。
+若正文首个 markdown cell 再渲染同一个 H1，页面会**标题连出两次**。在渲染时剥离首行 H1：
+
+```javascript
+let isFirstMarkdown = true
+if (cell.cell_type === 'markdown') {
+  let source = normalizeSource(cell.source)
+  if (isFirstMarkdown) {
+    isFirstMarkdown = false
+    source = source.replace(/^\s*#\s+[^\n]*(?:\n|$)/, '')   // 去掉与页面标题重复的 H1
+  }
+  return renderMarkdown(source, imageBase)
+}
+```
+
+### 5. 首页卡片必须绑定真实 notebook id
+
+两类典型 bug：
+
+1. **prop 名不匹配**：父组件传 `onSelect`，子组件却解构 `onSelectNotebook` → 点击报错、全站卡片失效。
+2. **id 拼接错误**：子组件把 `lessonId` 拼成 `part1-xxx/<lessonId>.ipynb`，与真实 id 不一致 → 点击无反应。
+
+正确做法：卡片数据直接存**真实 notebook id**，点击时 `onSelect(nb.notebookId)`；
+另设一个纯视觉用的 `id`（如 `nb-1`）去索引图标与配色。
+
+```javascript
+const handleNotebookSelect = (nb) => {
+  if (!nb?.notebookId || typeof onSelect !== 'function') return
+  onSelect(nb.notebookId)
+}
+```
+
+---
+
+## 渲染体检：用 Vite SSR 跑真实渲染器
+
+写完 Notebook 后**不要只靠肉眼看网页**。用 Vite 的 SSR 直接加载前端渲染器，
+把每篇 Notebook 渲染成 HTML 再机器检查，能提前发现"表格退化成裸文本""公式未渲染""标题重复"。
+
+```javascript
+// check_render.mjs —— 用 node 运行
+const { createServer } = await import('file:///.../web/node_modules/vite/dist/node/index.js')
+const server = await createServer({
+  configFile: '<repo>/web/vite.config.js',
+  root: '<repo>/web',
+  server: { middlewareMode: true },
+  appType: 'custom',
+  logLevel: 'error',
+  optimizeDeps: { noDiscovery: true, include: [] },   // 关键：避免 dep-scan 报错
+})
+const mod = await server.ssrLoadModule('/src/data/notebooks.js')
+for (const item of mod.getCatalog()) {
+  const nb = await mod.getNotebook(item.id)
+  const c = (re) => (nb.html.match(re) || []).length
+  console.log(item.id, 'table=', c(/<table>/g), 'math=', c(/math-display/g),
+              '裸表格行=', c(/<p>\|/g), '裸$$=', c(/\$\$/g))
+}
+await server.close()
+```
+
+判据：`裸表格行 = 0`、`裸$$ = 0`；`<table>` 数量应与源文件中的表格数一致
+（某章表格数明显偏少 = 有表格渲染失败）。
+
+---
+
+## Notebook 执行与复现基础设施
+
+**必须随仓库提供**，否则他人与 CI 都无法重跑 Notebook：
+
+| 文件 / 配置 | 作用 | 缺失后果 |
+|------------|------|----------|
+| `utils.py` | 中文路径读写、随机种子、中文字体、`show_images`、`compare_results` 等 | 每篇 Notebook 第一格就 `ModuleNotFoundError` |
+| `requirements.txt` | 依赖清单（SIFT 需 `opencv-contrib-python`） | 环境搭不起来 |
+| conda 环境注册 ipykernel | 供 nbconvert 调用 | `No such kernel named <env>` |
+
+```bash
+<env>/python.exe -m ipykernel install --user --name <env> --display-name "Python (<env>)"
+<env>/python.exe -m nbconvert --to notebook --execute \
+  --ExecutePreprocessor.kernel_name=<env> --ExecutePreprocessor.timeout=1800 \
+  --output exec_tmp.ipynb practice.ipynb
+```
+
+**执行流程约定**：先执行到临时文件 `exec_tmp.ipynb`，校验「0 个 error cell、代码格都有输出」
+后再覆盖 `practice.ipynb`——执行失败时不会破坏源文件。
+
+**写 assert 的原则**：断言"关系"，不要写脆弱的手工常数。例如可分离卷积与二维卷积
+**只在内部区域严格相等**（两次一维卷积各自填充，边界必然有差异）；
+不同边界策略会让边缘像素变亮/变暗——这类结论写成"内部区域 MAE < 1e-12"或 `A < B` 更稳。
+
+---
+
+## 症状 → 原因 → 处理 速查表
+
+| 症状 | 最可能的原因 | 处理 |
+|------|--------------|------|
+| 元素大面积没样式 | `index.css` 被裁成空壳 | 完整移植设计系统 CSS，跑类名/变量对账脚本 |
+| 公式无样式、排版错乱 | KaTeX CSS 走 CDN 且不可达 | 入口 CSS `@import "katex/dist/katex.min.css"` |
+| 页面出现裸的 `\| a \| b \|` | 表格分隔行不足 3 个短横线 | 统一改为 `\|:---:\|` |
+| 标题显示两次 | 正文 H1 与页面标题重复 | 渲染时剥离正文首个 H1 |
+| 侧边栏编号显示 999 | 排序映射表用中文标题做键、却拿目录名去查 | 改为从目录名前导数字推导 |
+| 侧边栏出现重复条目 | 同一主题同时放了 practice 与 practice_extra | 每个学习要点只留一个，拓展进附录 |
+| 首页卡片点击无反应 | prop 名不匹配 / lessonId 拼出的路径不存在 | 传 `onSelect` 并用真实 notebook id |
+| 正文出现 `**`、`\*` | 转义未支持或强调跨行断开 | 补齐转义、避免跨行强调 |
+| 插图 404 | Markdown 写了不存在的 `images/` 前缀 | 与实际图片目录对齐 |
+| 部署慢、产物巨大 | 大体量数据集被复制进站点产物 | `rsync --exclude='*.ppm' --exclude='*.3Dpoints'` |
+| Notebook 跑不起来 | 缺 `utils.py` / 内核未注册 / 缺依赖 | 按上节补齐基础设施并指定内核执行 |
+
+---
+
+## 仓库卫生与主题定制
+
+**发布前清理**：删除「只写不读」的生成产物（各章中间结果图），只保留输入图与被 Markdown
+引用的图片；删除一次性脚本；`.gitignore` 覆盖 `docs/`、`__pycache__/`、`*.ply`、
+`.ipynb_checkpoints/`、`.vscode/`、参考仓库副本目录。
+
+判定"是否为输入图"的简便方法：在 Notebook 源码里抹掉所有 `cv_imwrite(<字面量>, …)` 的首参后，
+文件名若仍出现在源码中（作为列表元素、`cv_imread` 参数或 Markdown 引用）即为需要保留的输入。
+
+**主题定制（改主色）**需同时改两处，容易漏：
+
+1. **CSS 变量**：在 `index.css` 末尾追加覆盖块（后写覆盖前写），同时覆盖 `:root` 与
+   `[data-theme="dark"]`：背景（`--bg-app` / `--bg-sidebar` / `--bg-hover` / `--bg-active`）、
+   边框、`--accent`、品牌渐变、引用块、行内代码、表格、滚动条、Modal。
+2. **组件里的字面颜色类**：`Welcome.jsx` 这类页面常用 `bg-blue-600`、`from-cyan-500`、
+   `from-[#dbeafe]` 等字面颜色，它们不随变量变化。整体改橙色时的映射：
+   `blue→orange`、`cyan→amber`、`purple/violet→rose`、`indigo→orange`，卡片渐变的任意值同步换暖色阶。
+
+校验：构建产物 CSS 应含新色值；主包 JS 中旧色类计数为 0、新色类计数 > 0。
+
+---
+
 ## 嵌套目录支持
 
 Notebook 可以放在任意深度的子目录中。系统会自动：
@@ -551,30 +830,33 @@ Markdown 单元格中的相对图片路径会被自动重写：
 
 侧边栏中的章节按正序（1, 2, 3... N）连续排列，不按部分重置。
 
-### 排序机制
+### 排序机制（推荐：从目录名前导数字推导）
 
-在 `notebooks.js` 中定义 `CHAPTER_ORDER` 映射表，使用连续编号：
+**不要**用「中文标题 → 序号」的映射表当排序键。一旦目录名与标题不一致（或标题被改写），
+查表会全部落到默认值，侧边栏编号就会集体变成 `999`（真实事故）。
+
+改为从目录名的**前导数字**推导，零维护：
 
 ```javascript
-const CHAPTER_ORDER = {
-  // 第一部分（第1-5章）
-  'lecture-01-intro': 1,
-  'lecture-02-core': 2,
-  ...
-  // 第二部分（第6-10章，连续编号不重置）
-  'lecture-06-advanced': 6,
-  ...
+// 目录形如 01-digital-image-acquisition / 07-image-stitching
+function getChapterOrder(dir) {
+  const m = String(dir).match(/^(\d+)/)
+  return m ? Number(m[1]) : 999          // 未编号的（如附录）排最后
+}
+
+// 侧边栏徽章文字：正文用 1..N，附录用 A1/A2
+function getChapterLabel(dir) {
+  const m = String(dir).match(/^(A\d+|\d+)/i)
+  return m ? m[1].toUpperCase() : ''
 }
 ```
 
 排序逻辑（三级排序）：
-1. 按 `PARTS` 顺序（part1 在 part2 之前）
-2. 按 `CHAPTER_ORDER[dir]`（章节号正序排列）
-3. `practice.ipynb` 在 `practice_extra.ipynb` 之前
+1. 按 `PARTS` 顺序（part1 在 part2 之前，附录在最后）
+2. 按 `chapterOrder`（从目录名推导，连续编号不按部分重置）
+3. 同章内主 Notebook 在拓展 Notebook 之前
 
-### getCatalog 必须传递 chapterOrder
-
-`getCatalog()` 返回的对象必须包含 `chapterOrder` 字段：
+### getCatalog 必须传递排序与标签字段
 
 ```javascript
 export function getCatalog() {
@@ -584,19 +866,30 @@ export function getCatalog() {
     part,
     partDir: entry.partDir,
     chapterOrder: entry.chapterOrder,
+    numLabel: entry.numLabel,        // 侧边栏徽章文字："1" / "A1"
   }))
 }
 ```
 
 ### 侧边栏章节号显示
 
-`Sidebar.jsx` 中的 `buildSidebarSections` 使用 `item.chapterOrder` 生成章节号徽章：
-- `practice.ipynb` 显示为 `1`, `2`, `3`...
-- `practice_extra.ipynb` 显示为 `4+`, `5+`...（带 + 号表示拓展）
+`Sidebar.jsx` 的 `buildSidebarSections` 用 **`numLabel`** 生成徽章（缺该字段就会显示错编号）：
+
+- 正文章节：`1`, `2`, `3` … `N` —— **不要带 `+` 号**；
+- 附录：`A1`, `A2`，单独成组排在最后。
+
+**不要用 `4+` 这类后缀**表示"拓展"。需求方明确要求过「连续编号、不要 `+` 与"拓展"标签」；
+拓展内容一律进附录目录，而不是在主章节里挂一个带后缀的孪生 Notebook。
+
+### 也支持 CHAPTER_ORDER 映射（备选）
+
+若目录名不含序号（如 `lecture-01-intro` 之外的纯中文目录），再退回映射表方案，
+并把键设为**目录名**（而不是章节标题）——用标题做键正是"编号全变 999"事故的原因。
 
 ### 添加新章节
 
-新增章节时，在 `CHAPTER_ORDER` 映射表中添加对应目录名和序号即可（使用下一个连续数字）。未在映射表中的目录会排在最后（序号 999）。
+新增章节目录时以两位数字开头（如 `10-xxx`），无需改动任何映射表；
+未编号目录（如 `appendix/`）自动排到最后。
 
 ---
 
@@ -714,6 +1007,36 @@ jobs:
 18. **批量生成**: 按模块分批生成，使用 Python 脚本程序化创建 .ipynb 文件
 19. **预渲染输出**: 本地执行 Notebook 并嵌入输出，前端无需内核即可显示结果
 20. **增量推送**: 每批完成后立即推送，GitHub Actions 自动部署
+21. **参考优先**: 任何网站任务动手前，先读参考项目 `web/` 的样式、组件、配置（强制第一步）
+22. **样式完整性对账**: 移植或精简 CSS 后必须跑到「缺失类 0、缺失变量 0」
+23. **KaTeX 随包内置**: 入口 CSS `@import "katex/dist/katex.min.css"`，不要走 CDN
+24. **渲染器更严格**: 表格分隔行至少 3 个短横线；强调不跨行；补 `\*` `\_` 转义支持
+25. **标题去重**: 渲染时剥离正文首个 H1，避免与页面标题重复
+26. **编号靠目录名**: 从目录名前导数字推导章节号；`getCatalog()` 传 `chapterOrder` 与 `numLabel`
+27. **一个要点一个 Notebook**: 拓展内容进附录，不使用 `+` 后缀标签
+28. **首页卡片绑定真实 id**: 数据里存 `notebookId`，点击 `onSelect(nb.notebookId)`
+29. **复现三件套**: `utils.py` + `requirements.txt` + 注册 conda 环境的 ipykernel
+30. **执行走临时文件**: 先执行到 `exec_tmp.ipynb`，校验无 error 再覆盖源文件
+31. **机器验收**: 用 Vite SSR 渲染体检 + 线上 asset 校验，不要只靠肉眼看网页
+32. **部署瘦身**: 用 `rsync --exclude` 排除大体量数据集；发布前做仓库卫生清理
+33. **断言写关系**: 断言"内部区域严格相等""A < B"，不要写脆弱的手工常数
+34. **换主题色改两处**: CSS 变量覆盖 + 组件内字面颜色类映射（如 `blue→orange`）
+
+---
+
+## 与 course-notebook-generator 的关系
+
+本技能是 `course-notebook-generator` 的**超集**。后者聚焦「生成课程 Notebook 并部署」的主干流程
+（四步教学路径、质量清单、代码来源规则、批量生成、预渲染输出、GitHub Pages 部署）；
+本技能在主干之上补齐了：
+
+- 两种工作模式（自有 Notebook / 大学课程学术教程）与多课程交叉对照改写；
+- 语言策略（模式二默认中文、英文需显式要求，README 双语）与 `papers/` 论文研读笔记；
+- **前端样式与渲染排错**、**渲染体检（Vite SSR）**、**Notebook 执行与复现基础设施**、
+  **症状 → 原因 → 处理速查表**、**仓库卫生与主题定制**（本技能新增）。
+
+两处内容冲突时以本技能为准，尤其是「章节编号」与「前端样式」两部分
+（`course-notebook-generator` 里的 `CHAPTER_ORDER` 用标题做键、拓展用 `4+` 标注，均已废弃）。
 
 ---
 
@@ -729,6 +1052,15 @@ jobs:
 8. **教学风格**：walkinglabs 风格（直觉 → 小数字 → 公式 → 代码 → 关键观察）显著提升零基础可访问性
 9. **预渲染输出**：执行 Notebook 并嵌入输出可大幅提升用户体验，无需本地运行环境
 10. **双语支持**：模式二默认中文，英文版本需用户显式要求，避免不必要的双倍工作量
+11. **参考优先**：先读参考项目 `web/` 的样式与组件再动手；不要凭印象重写、也不要裁剪设计系统
+12. **CSS 就是功能**：裁剪 `index.css` 会让 90+ 个样式类与 10+ 个变量失效，页面"看起来全错"
+13. **渲染器比标准 Markdown 严格**：表格分隔行 ≥3 个短横线、强调不跨行、转义需显式支持
+14. **页面标题只出现一次**：正文首个 H1 要剥离（页面顶部已用 `meta.title` 渲染）
+15. **编号用目录名推导**：用标题做排序键会集体退化成 999
+16. **一个学习要点一个 Notebook**：拓展进附录，不用 `+` 标签
+17. **复现三件套**：`utils.py`、`requirements.txt`、注册 ipykernel —— 缺一件 Notebook 就跑不起来
+18. **机器验收优于肉眼**：SSR 渲染体检 + 线上 asset 校验能提前拦住大部分"看起来不对"
+19. **换色改两处**：CSS 变量 + 组件里的字面颜色类（`bg-blue-600`、`from-[#dbeafe]` 这类不随变量变）
 
 ## 参考模板
 

@@ -4,6 +4,44 @@ An interactive learning tutorial website generator based on Jupyter Notebooks.
 
 > Built as a TRAE Skill referencing the [modern-llm-notebook](https://github.com/walkinglabs/modern-llm-notebook) template | [中文](./README.md)
 
+## Mandatory First Step: Consult the Reference Site
+
+**Before any website task, open the reference project first and treat it as the format baseline**
+(local copy preferred, otherwise GitHub):
+
+| Reference | Location | Purpose |
+|-----------|----------|---------|
+| modern-llm-notebook | `modern-llm-notebook/web/` | The single baseline for components, design-system CSS, build and deploy config |
+
+Must read: `web/src/styles/index.css` (complete design system), `web/src/components/` (component list),
+`web/index.html` (fonts and math loading), `web/vite.config.js`, `.github/workflows/`.
+
+**Never rewrite styles/components from memory, and never trim the reference design system.**
+This comes from a real incident: trimming `index.css` into a stub left 93 style classes and
+10 CSS variables undefined, and wide areas of the page lost all styling.
+
+## What's New in v2
+
+Adds the full playbook for the class of problems where "the site builds but looks wrong":
+
+- **Mandatory first step**: consult the reference project before touching a website
+- **Style completeness audit**: a script that cross-checks classes/variables used by components
+  against CSS definitions, requiring zero missing
+- **KaTeX bundled locally**: no more CDN-loaded math styles (they vanish on restricted networks)
+- **Renderer hard constraints**: table separator needs >= 3 dashes, emphasis must not span lines,
+  `\*` escapes must be supported, image path prefixes must match real directories
+- **Page title de-duplication**: strip the leading H1 from the first markdown cell
+- **Chapter numbering derived from directory names**: the "use chapter titles as sort keys"
+  approach is deprecated (it silently degrades every number to 999)
+- **One notebook per learning point**: the `4+` extension suffix is deprecated; put extras in an appendix
+- **Homepage cards bound to real notebook ids**: fixes broken clicks from prop/id mismatches
+- **Render audit via Vite SSR**: render every notebook with the real renderer and check the HTML
+- **Reproducibility kit**: `utils.py` + `requirements.txt` + registered ipykernel, plus the
+  "execute to a temp file, validate, then overwrite" convention
+- **Deploy slimming**: `rsync --exclude` keeps large datasets out of the site artifact
+- **Theme changes touch two places**: CSS variables and literal colour classes (e.g. `blue→orange`)
+- **Symptom → Cause → Fix cheat sheet**: 11 common failures with targeted fixes
+
 ## Language Policy
 
 - **Mode 1**: Follows the language of the user's notebooks
@@ -217,6 +255,20 @@ Modify CSS variables in `web/src/styles/index.css`.
 13. Batch generation: Generate by module batches, use Python scripts
 14. Pre-rendered outputs: Execute notebooks and embed results
 15. Incremental push: Push and deploy immediately after each batch
+16. Reference first: read the reference project's styles and components before touching a site
+17. Style audit: after porting or trimming CSS, verify zero missing classes and variables
+18. Bundle KaTeX locally instead of using a CDN
+19. Table separators need at least three dashes; emphasis must not span lines
+20. Strip the leading H1 so the page title is not duplicated
+21. Derive chapter numbers from directory names; pass `chapterOrder` and `numLabel` from `getCatalog()`
+22. One notebook per learning point; extras go to an appendix (no `+` suffix)
+23. Bind homepage cards to real notebook ids
+24. Reproducibility kit: `utils.py` + `requirements.txt` + registered ipykernel
+25. Execute notebooks via "temp file → validate → overwrite"
+26. Machine-verify with a Vite SSR render audit instead of eyeballing the page
+27. Exclude large datasets from the deploy artifact with `rsync --exclude`
+28. Assert relationships (interior regions are exactly equal / A < B), not brittle constants
+29. Changing the theme colour means updating both CSS variables and literal colour classes
 
 ## Reference Projects
 
