@@ -1026,6 +1026,10 @@ jobs:
 
 ## 与 course-notebook-generator 的关系
 
+> **今后所有教程网站任务统一以本技能为唯一入口。**
+> `course-notebook-generator` 已标记为**废弃（DEPRECATED）**，仅作历史保留；
+> 若它被加载，其开头会立即重定向到本技能。
+
 本技能是 `course-notebook-generator` 的**超集**。后者聚焦「生成课程 Notebook 并部署」的主干流程
 （四步教学路径、质量清单、代码来源规则、批量生成、预渲染输出、GitHub Pages 部署）；
 本技能在主干之上补齐了：
