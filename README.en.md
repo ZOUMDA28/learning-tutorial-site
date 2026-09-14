@@ -25,6 +25,9 @@ Users provide a research direction and learning content, and the system automati
 - Paper reading notes: `papers/` directory records reading notes for each lecture
 - Zero-dependency implementation: Core algorithms implemented from scratch, no wrapper libraries
 - Multi-course cross-reference: Stanford as the main line, cross-referencing MIT/CMU/Berkeley for improvement
+- **Quality audit**: Each notebook follows a four-step learning path (Intuition→Manual Calc→Implementation→Experiment), with quality checklist audit
+- **Batch generation**: Generate by module batches, using Python scripts to programmatically create .ipynb files
+- **Pre-rendered outputs**: Execute notebooks locally and embed outputs, no kernel needed at runtime
 
 **Reference benchmarks:**
 - [self-improving-agent-notebook](https://github.com/walkinglabs/self-improving-agent-notebook) - Stanford CS329A course model
@@ -51,6 +54,10 @@ Users provide a research direction and learning content, and the system automati
 - **Responsive design** - Mobile-friendly
 - **Prefetch cache** - Smart prefetching for faster navigation
 - **GitHub Actions auto-deploy** - Push to deploy to GitHub Pages (dual deployment strategy)
+- **Quality audit checklist** - Each notebook audited against 8 quality standards
+- **Batch generation scripts** - Python scripts for programmatic .ipynb creation
+- **Pre-rendered outputs** - Executed notebook embedded outputs, no local runtime needed
+- **walkinglabs teaching style** - Intuition-first, small-number verification, key observation callouts
 
 ## Tech Stack
 
@@ -206,6 +213,10 @@ Modify CSS variables in `web/src/styles/index.css`.
 9. Sequential chapter numbering: No reset per part
 10. Multi-course cross-reference: Stanford first, then MIT/CMU/Berkeley
 11. Language policy: Mode 2 defaults to Chinese, English requires explicit request
+12. Quality audit: Audit each batch against the quality checklist
+13. Batch generation: Generate by module batches, use Python scripts
+14. Pre-rendered outputs: Execute notebooks and embed results
+15. Incremental push: Push and deploy immediately after each batch
 
 ## Reference Projects
 

@@ -230,7 +230,61 @@ university-course-site/
 - 参考文献列表（含 arXiv 链接）
 - **内容来源标注**（如「本节视角参考 MIT 6.S191 L5」）
 
-### 3. 学术引用规范
+### 3. Notebook 质量标准
+
+#### 四步教学路径（强制执行）
+
+每篇 Notebook **必须** 遵循以下结构，顺序不可调换：
+
+1. **Intuition（直觉）** — 在公式之前建立直觉。使用类比、真实世界例子、「为什么这很重要？」
+2. **Manual Calculation（手算验证）** — 小数字例子，读者可以手工验证（例如 InfoNCE 的 batch_size=2，双边滤波的 3×3 邻域）
+3. **Code Implementation（代码实现）** — 零依赖实现，含 assert 验证，固定随机种子
+4. **Experiment & Observation（实验与观察）** — 可视化，带 `★ Key Observation` 标注，将输出与概念联系起来
+
+#### 教学风格参考（walkinglabs.github.io）
+
+- **直觉优先**：先讲「为什么重要」，再给公式
+- **小数字**：使用 2-4 元素向量、3×3 矩阵、batch_size=2 — 读者可手工验证
+- **表格胜过长文**：用表格比较方法/概念
+- **关键观察**：每节末尾用 `> ★ **Key Observation**: ...` 总结
+- **具体例子**：用「猫/狗」而非「x₁/x₂」，用「(3,2,5)」而非「(X,Y,Z) 抽象」
+- **分步推导**：展示中间计算步骤，不只是最终结果
+
+#### 质量审计清单
+
+每篇 Notebook 生成后，必须对照以下清单进行审计：
+
+| 检查项 | 验证方法 |
+|--------|----------|
+| 直觉先于公式 | 每个概念的首次提及都有非数学解释 |
+| 手算验证 | 至少一个可手工追踪的小例子 |
+| 代码来源标注 | Notebook 末尾列出 GitHub 仓库 URL 和作业/讲座来源 |
+| 文字/公式比例 | ≥ 20% 文字解释（不是公式堆砌） |
+| 关键观察 | 关键代码输出后有 `★` 标注 |
+| 固定种子 | `set_random_seed(42)` 或等效设置 |
+| 独立单元格 | 每个代码单元格无需前面单元格即可运行（理想情况） |
+| 中文语言 | 默认中文；仅在明确要求时使用英文 |
+
+#### 常见质量问题与修复
+
+| 问题 | 修复方法 |
+|------|----------|
+| 公式堆砌无解释 | 公式前增加直觉段落，公式后增加小例子 |
+| 函数名不一致 | 理论和实践部分的函数名对齐 |
+| 缺少手算验证 | 插入 2-3 元素向量的分步示例 |
+| 只有抽象符号 | 将 `X, Y, Z` 替换为具体的 `(3, 2, 5)` |
+| 无关键观察 | 每个代码输出块后添加 `> ★ **Key Observation**: ...` |
+
+### 4. 代码来源规则
+
+向 Notebook 添加代码时：
+
+1. **优先级**：GitHub 热门仓库（★ > 1000）优先 → 最新课程作业 → 论文
+2. **标注来源**：在 Notebook 末尾，列出 GitHub 仓库 URL 和作业/讲座来源
+3. **改编而非复制**：将代码适配到 Notebook 风格，添加中文注释，使用固定种子
+4. **零依赖**：核心算法手动实现；仅使用 numpy/matplotlib 进行 I/O
+
+### 5. 学术引用规范
 
 **论文引用格式（三种方式）：**
 
@@ -259,7 +313,7 @@ _图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[Deep
 - 研读笔记内容：论文核心思想、关键公式/算法、实验数字、教学主线、代码演示切入点
 - 可选：`scripts/download_papers.py` 脚本按 arXiv ID 下载论文 PDF
 
-### 4. 代码要求
+### 6. 代码要求
 
 **零依赖原则：**
 - 核心算法从零实现，不使用 LangChain、transformers 等封装库
@@ -275,7 +329,7 @@ _图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[Deep
 - 使用固定随机种子（`np.random.seed(42)`, `torch.manual_seed(42)`）
 - 每个 Notebook 独立可运行，不依赖前面的状态
 
-### 5. 图片与可视化要求
+### 7. 图片与可视化要求
 
 **图表类型：**
 - matplotlib 生成的图表（曲线图、柱状图、散点图、热力图）
@@ -289,11 +343,11 @@ _图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[Deep
 - 每张图片必须有中文图注说明
 - 引用论文图片时标注出处
 
-**matplotlib 示例：**
+**matplotlib 中文支持：**
 ```python
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
+matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Noto Sans CJK SC', 'WenQuanYi Micro Hei', 'DejaVu Sans']
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 fig, ax = plt.subplots(1, 1, figsize=(8, 4))
@@ -307,7 +361,7 @@ plt.savefig('training_curve.png', dpi=150, bbox_inches='tight')
 plt.show()
 ```
 
-### 6. 前沿论文集成
+### 8. 前沿论文集成
 
 **如何找到最新相关论文：**
 1. 搜索 arXiv（使用 WebSearch 工具）
@@ -323,7 +377,70 @@ plt.show()
 5. 可视化关键结果
 6. 在 Notebook 末尾列出参考文献
 
-### 7. 参考模板
+### 9. 批量生成策略
+
+当需要生成大量 Notebook（例如 19 个 CS231n Notebook）时：
+
+1. **按模块分批**：每批 3-6 个 Notebook
+2. **生成脚本**：使用 Python 脚本（`gen_batchN.py`）以编程方式创建 .ipynb 文件
+3. **每批后审计**：检查文字/公式比例、直觉优先、手算验证
+4. **修复后再下一批**：不要累积质量债务
+5. **每批后推送**：增量部署
+
+#### Notebook 生成脚本模板
+
+```python
+import json
+from pathlib import Path
+
+def md_cell(source):
+    if isinstance(source, str):
+        source = source.split('\n')
+        source = [s + '\n' for s in source]
+        if source:
+            source[-1] = source[-1].rstrip('\n')
+    return {"cell_type": "markdown", "metadata": {}, "source": source}
+
+def code_cell(source):
+    # Same as md_cell but with code type
+    cell = md_cell(source)
+    cell["cell_type"] = "code"
+    cell["execution_count"] = None
+    cell["outputs"] = []
+    return cell
+
+def build_notebook(cells, kernel="python3"):
+    return {
+        "cells": cells,
+        "metadata": {
+            "kernelspec": {"display_name": "Python 3", "language": "python", "name": kernel},
+            "language_info": {"name": "python", "version": "3.8"}
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5
+    }
+
+# Usage
+cells = [
+    md_cell("# Chapter Title\n\n## Intuition\n..."),
+    code_cell("import numpy as np\n..."),
+]
+nb = build_notebook(cells)
+Path("notebooks/part1-xxx/01-topic.ipynb").write_text(
+    json.dumps(nb, ensure_ascii=False, indent=1), encoding='utf-8'
+)
+```
+
+### 10. 预渲染输出
+
+为了让 Notebook 无需运行即可显示结果：
+
+1. 本地执行 Notebook：`jupyter nbconvert --to notebook --execute --inplace`
+2. 输出（base64 PNG 图片、文本、HTML）嵌入到 .ipynb JSON 中
+3. 前端从 `cell.outputs` 渲染 — 运行时无需内核
+4. 使用 `filterDisplayWarnings()` 抑制 matplotlib 字体警告
+
+### 11. 参考模板
 
 以下三个仓库是本模式的标杆参考：
 
@@ -337,6 +454,77 @@ plt.show()
 - CS329A 模板：论文→代码的转化流程，papers/ 目录，研读笔记
 - World Models 模板：`[[作者, 年份]](链接)` 引用格式，图注出处
 - Modern RL 模板：章节+附录结构，GIF/SVG/WEBP 多媒体，TikZ→SVG
+
+---
+
+## 前端开发指南
+
+### 核心组件
+
+| 组件 | 功能 |
+|------|------|
+| `Sidebar.jsx` | 左侧边栏导航，按部分组织教程，章节号正序排列 |
+| `NotebookViewer.jsx` | Notebook 渲染器，显示内容和右侧大纲 |
+| `Welcome.jsx` | 首页欢迎页，展示课程概览 |
+| `NotesPanel.jsx` | 笔记和书签管理面板 |
+| `SettingsPanel.jsx` | 设置面板（主题、字号） |
+| `ImageLightbox.jsx` | 图片灯箱查看器 |
+
+### 核心数据模块
+
+**data/notebooks.js**:
+- 使用 `import.meta.glob('../../../notebooks/**/*.ipynb', { query: '?raw', import: 'default' })` 动态加载
+- 嵌套路径正则匹配：`rootDir/([^/]+)/(.+?)\.ipynb$`
+- 计算 imageBase 路径用于图片 URL 重写
+- `CHAPTER_ORDER` 映射表控制章节排序（连续编号1-N，不按部分重置）
+- 每个条目包含 `chapterOrder` 字段，`getCatalog()` 必须传递此字段
+- 实现 Markdown 渲染（标题、列表、表格、引用、代码块）
+- 实现 Python 代码高亮
+- 实现 Notebook 单元格渲染（markdown cell, code cell, output）
+- 支持 KaTeX 数学公式渲染
+- 实现内存缓存和预取机制
+
+**data/sidebar.js**:
+- 定义学习路径（PATH_STEPS）
+- 定义精选笔记本（RUNNABLE_NOTEBOOKS）
+- lessonId 必须与 notebooks.js 生成的 ID 匹配
+
+### Vite 配置
+
+**vite.config.js** 关键配置：
+- 自定义虚拟模块插件 `virtual:notebook-catalog`
+- 递归扫描 notebooks 目录，生成 catalog
+- 嵌套路径正则：`rel.match(/^([^/]+)\/(.+)\.ipynb$/)`
+- ID 生成：`idPath.replace(/\//g, '-')`
+- 从 Notebook JSON 提取第一个 `#` 标题作为显示标题
+- 构建输出到 `../docs` 目录
+- `base: './'` 确保相对路径
+
+### 主题自定义
+
+修改 `web/src/styles/index.css` 中的 CSS 变量。橙色主题示例：
+
+```css
+:root {
+  --accent: #ea580c;
+  --accent-soft: rgba(234, 88, 12, 0.09);
+  --brand-gradient-from: rgba(234, 88, 12, 0.11);
+  --brand-gradient-to: rgba(251, 146, 60, 0.12);
+  --brand-accent: #ea580c;
+  --code-inline-bg: #fff7ed;
+  --code-inline-text: #c2410c;
+  --blockquote-bg: #fff7ed;
+  --blockquote-border: rgba(234, 88, 12, 0.1);
+}
+
+[data-theme="dark"] {
+  --accent: #fb923c;
+  --accent-soft: rgba(251, 146, 60, 0.12);
+  --brand-gradient-from: rgba(251, 146, 60, 0.11);
+  --brand-gradient-to: rgba(255, 180, 0, 0.12);
+  --brand-accent: #fb923c;
+}
+```
 
 ---
 
@@ -410,99 +598,77 @@ export function getCatalog() {
 
 新增章节时，在 `CHAPTER_ORDER` 映射表中添加对应目录名和序号即可（使用下一个连续数字）。未在映射表中的目录会排在最后（序号 999）。
 
-## 核心组件
+---
 
-| 组件 | 功能 |
-|------|------|
-| `Sidebar.jsx` | 左侧边栏导航，按部分组织教程，章节号正序排列 |
-| `NotebookViewer.jsx` | Notebook 渲染器，显示内容和右侧大纲 |
-| `Welcome.jsx` | 首页欢迎页，展示课程概览 |
-| `NotesPanel.jsx` | 笔记和书签管理面板 |
-| `SettingsPanel.jsx` | 设置面板（主题、字号） |
-| `ImageLightbox.jsx` | 图片灯箱查看器 |
+## GitHub Pages 部署
 
-## 核心数据模块
+### deploy.yml 关键规则
 
-**data/notebooks.js**:
-- 使用 `import.meta.glob('../../../notebooks/**/*.ipynb', { query: '?raw', import: 'default' })` 动态加载
-- 嵌套路径正则匹配：`rootDir/([^/]+)/(.+?)\.ipynb$`
-- 计算 imageBase 路径用于图片 URL 重写
-- `CHAPTER_ORDER` 映射表控制章节排序（连续编号1-N，不按部分重置）
-- 每个条目包含 `chapterOrder` 字段，`getCatalog()` 必须传递此字段
-- 实现 Markdown 渲染（标题、列表、表格、引用、代码块）
-- 实现 Python 代码高亮
-- 实现 Notebook 单元格渲染（markdown cell, code cell, output）
-- 支持 KaTeX 数学公式渲染
-- 实现内存缓存和预取机制
+1. **源必须是 "GitHub Actions"**（不是 "Deploy from a branch"），在仓库 Settings → Pages 中设置
+2. 使用 `npm install`（不是 `npm ci` — 避免 package-lock.json 依赖问题）
+3. Notebooks 目录必须已存在于仓库中（不是从旧的中文命名目录复制）
 
-**data/sidebar.js**:
-- 定义学习路径（PATH_STEPS）
-- 定义精选笔记本（RUNNABLE_NOTEBOOKS）
-- lessonId 必须与 notebooks.js 生成的 ID 匹配
-
-## Vite 配置
-
-**vite.config.js** 关键配置：
-- 自定义虚拟模块插件 `virtual:notebook-catalog`
-- 递归扫描 notebooks 目录，生成 catalog
-- 嵌套路径正则：`rel.match(/^([^/]+)\/(.+)\.ipynb$/)`
-- ID 生成：`idPath.replace(/\//g, '-')`
-- 从 Notebook JSON 提取第一个 `#` 标题作为显示标题
-- 构建输出到 `../docs` 目录
-- `base: './'` 确保相对路径
-
-## 主题自定义
-
-修改 `web/src/styles/index.css` 中的 CSS 变量。橙色主题示例：
-
-```css
-:root {
-  --accent: #ea580c;
-  --accent-soft: rgba(234, 88, 12, 0.09);
-  --brand-gradient-from: rgba(234, 88, 12, 0.11);
-  --brand-gradient-to: rgba(251, 146, 60, 0.12);
-  --brand-accent: #ea580c;
-  --code-inline-bg: #fff7ed;
-  --code-inline-text: #c2410c;
-  --blockquote-bg: #fff7ed;
-  --blockquote-border: rgba(234, 88, 12, 0.1);
-}
-
-[data-theme="dark"] {
-  --accent: #fb923c;
-  --accent-soft: rgba(251, 146, 60, 0.12);
-  --brand-gradient-from: rgba(251, 146, 60, 0.11);
-  --brand-gradient-to: rgba(255, 180, 0, 0.12);
-  --brand-accent: #fb923c;
-}
-```
-
-## GitHub Actions 部署
-
-**.github/workflows/deploy.yml** 使用双部署策略，兼容两种 Pages 源设置：
-
-### 权限配置
+### 工作流模板
 
 ```yaml
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 permissions:
   contents: write
   pages: write
   id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+  deploy:
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/deploy-pages@v4
 ```
 
-### 关键步骤
+### 双部署策略
 
-1. 递归复制中文目录到 notebooks 结构
-2. 安装依赖（使用 npm install，非 npm ci）
-3. 构建：`npm run build`
-4. 复制 notebook 资源（图片等）到构建输出
-5. 部署方式 A：actions/deploy-pages（Pages 源 = GitHub Actions）
-6. 部署方式 B：peaceiris/actions-gh-pages（Pages 源 = gh-pages 分支）
+**.github/workflows/deploy.yml** 使用双部署策略，兼容两种 Pages 源设置：
+
+- **部署方式 A**：actions/deploy-pages（Pages 源 = GitHub Actions）
+- **部署方式 B**：peaceiris/actions-gh-pages（Pages 源 = gh-pages 分支）
 
 ### GitHub Pages 源设置
 
 **选项 A（推荐）**：Source = GitHub Actions
 **选项 B**：Source = Deploy from a branch → gh-pages → / (root)
+
+### 网络/推送故障排除
+
+| 问题 | 解决方案 |
+|------|----------|
+| SSH 连接重置 | 切换到 HTTPS：`git remote set-url origin https://github.com/USER/REPO.git` |
+| `npm ci` 失败 | 改用 `npm install` |
+| Pages 显示原始 README | Settings → Pages → Source = "GitHub Actions" |
+| 侧边栏为空（"未找到相关章节"） | 检查 `notebooks/` 目录是否存在于仓库；检查构建后的 JS 中的 `NOTEBOOK_CATALOG`；验证 `getCatalog()` 返回非空 |
+| 章节号全为 0 | `getCatalog()` 必须包含 `chapterOrder` 字段 |
+| 强制推送被拒绝 | 使用 `--force-with-lease`（比 `--force` 更安全）；需用户确认 |
+
+---
 
 ## Notebook 组织规范
 
@@ -517,6 +683,14 @@ permissions:
 - 图片资源文件（.png, .jpg, .svg）
 
 确保每个 Notebook 的第一个 markdown cell 是一级标题（# 标题），用于自动提取显示名称。
+
+## 增量部署
+
+- 增量推送 Notebook — 不要等全部完成
+- 每批之后：`git add` → `git commit` → `git push`
+- GitHub Actions 在推送到 main 时自动重建
+
+---
 
 ## 最佳实践
 
@@ -536,6 +710,25 @@ permissions:
 14. **可视化**: 每个核心概念配 matplotlib 图表或论文配图
 15. **多课程交叉对照**: 以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化，标注内容来源（模式一/二均支持）
 16. **语言策略**: 模式二默认中文生成，英文版本需用户显式要求；README 同时提供中英文两个版本
+17. **质量审计**: 每批 Notebook 生成后对照质量清单审计，修复问题后再继续
+18. **批量生成**: 按模块分批生成，使用 Python 脚本程序化创建 .ipynb 文件
+19. **预渲染输出**: 本地执行 Notebook 并嵌入输出，前端无需内核即可显示结果
+20. **增量推送**: 每批完成后立即推送，GitHub Actions 自动部署
+
+---
+
+## 关键经验总结
+
+1. **npm ci vs npm install**：`npm ci` 要求精确匹配 `package-lock.json`；CI 中 `npm install` 更容错
+2. **章节编号**：必须跨模块连续；`getCatalog()` 必须返回 `chapterOrder` 字段
+3. **基础路径**：vite.config 中的 `base: './'` 对 GitHub Pages 子路径至关重要
+4. **部署源**：使用 "GitHub Actions" 而非 "Deploy from a branch" — 否则显示原始文件
+5. **Notebook 目录**：Vite 虚拟模块在构建时扫描；构建时 notebooks 必须在仓库中
+6. **强制推送**：`--force-with-lease` 是比 `--force` 更安全的替代；始终获得用户确认
+7. **质量债务**：每批审计和修复后再生成下一批 — 不要让「太抽象」累积
+8. **教学风格**：walkinglabs 风格（直觉 → 小数字 → 公式 → 代码 → 关键观察）显著提升零基础可访问性
+9. **预渲染输出**：执行 Notebook 并嵌入输出可大幅提升用户体验，无需本地运行环境
+10. **双语支持**：模式二默认中文，英文版本需用户显式要求，避免不必要的双倍工作量
 
 ## 参考模板
 
