@@ -1,11 +1,11 @@
 ---
 name: "learning-tutorial-site"
-description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（React+Vite+KaTeX），含前端样式对账与渲染体检。支持笔记高亮、书签、搜索筛选、代码折叠、图片灯箱、大纲导航等完整功能。两种模式：(1) 自有 ipynb 教程网站；(2) 按研究方向生成大学课程级学术教程（2026 更新：引用核验、现代工具链 uv、CI 校验、开源合规）。默认中文，英文需告知。当用户要创建/修改在线教程或课程网站时调用。"
+description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（React+Vite+KaTeX，前端基准 modern-llm-notebook），含前端样式对账与渲染体检。支持笔记高亮、书签、搜索筛选、图片灯箱、大纲导航等功能。按研究方向生成大学课程级学术教程（2026 更新：引用核验、双层代码策略、现代工具链 uv、CI 校验、开源合规）。默认中文，英文需告知。当用户要创建/修改在线教程或课程网站时调用。"
 ---
 
 # Learning Tutorial Site Generator
 
-基于 Jupyter Notebook 的交互式学习教程网站生成器，参考 modern-llm-notebook 项目模板构建。支持从自有 Notebook 或大学公开课程生成学术级教程网站。
+基于 Jupyter Notebook 的交互式学习教程网站生成器，参考 modern-llm-notebook 项目模板构建（前端唯一基准：<https://walkinglabs.github.io/modern-llm-notebook/>）。用户给定研究方向和学习内容，自动生成基于大学公开课程的学术级教程网站。
 
 ## 强制第一步：先对照参考网站（每次做/改网站都必须执行）
 
@@ -13,18 +13,15 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 
 | 参考 | 位置 | 用途 |
 |------|------|------|
-| modern-llm-notebook | `modern-llm-notebook/web/`（本地优先，其次 GitHub） | 前端组件、设计系统 CSS、构建与部署配置的唯一基准 |
-| Hands-On-Computer-Vision | 本地项目或 GitHub `ZOUMDA28/Hands-On-Computer-Vision` | 笔记高亮、书签、搜索筛选、Welcome 页完整结构、橙色主题等增强功能的参考实现 |
+| modern-llm-notebook | `modern-llm-notebook/web/`（本地优先，其次 GitHub），线上站点 https://walkinglabs.github.io/modern-llm-notebook/ | 前端组件、设计系统 CSS、构建与部署配置的**唯一基准** |
 
 **动手前的必读清单（逐项打开确认）**：
 
 1. `web/src/styles/index.css` —— 完整设计系统（CSS 变量 + 全部自定义类 + KaTeX 与字体 `@import`）；
-2. `web/src/components/` —— 组件清单（注意 NotesPanel / SettingsPanel / ImageLightbox 这类容易漏掉的组件）；
-3. `web/src/data/notebooks.js` —— Notebook 渲染器、Markdown 解析、代码高亮、缓存与预取；
-4. `web/src/data/sidebar.js` —— 学习路径定义、精选 Notebook 卡片数据；
-5. `web/index.html` —— 字体的 preconnect 与样式表引入方式；
-6. `web/vite.config.js` —— 虚拟模块插件、`base: './'`、构建输出目录；
-7. `.github/workflows/` —— 部署方式与 GitHub Pages 源设置。
+2. `web/src/components/` —— 组件清单（注意 GuidedTour / ChangelogModal 这类容易漏掉的组件）；
+3. `web/index.html` —— 字体的 preconnect 与样式表、MathJax/KaTeX 的引入方式；
+4. `web/vite.config.js` —— 虚拟模块插件、`base: './'`、构建输出目录；
+5. `.github/workflows/` —— 部署方式与 GitHub Pages 源设置。
 
 **规则**：
 
@@ -39,30 +36,10 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 
 ## 语言策略
 
-- **模式一**：跟随用户 Notebook 语言
-- **模式二**：**默认中文**生成所有 Notebook 和研读笔记。如需英文版本，用户须显式告知，届时生成 `notebooks-en/` 和 `NOTES.en.md` 英文镜像
+- **默认中文**生成所有 Notebook 和研读笔记。如需英文版本，用户须显式告知，届时生成 `notebooks-en/` 和 `NOTES.en.md` 英文镜像
 - **README**：项目同时提供中文 README.md 和英文 README.en.md 两个版本
 
-## 两种工作模式
-
-### 模式一：自有 Notebook 教程
-用户提供 .ipynb 笔记本，生成可浏览的网页教程。适用于已有教学材料的情况。
-
-**可选：对照国外课程进一步改写**
-
-用户如有需要，可以对照斯坦福、MIT、CMU、UC Berkeley 等国外大学同类课程的公开内容，对自有 Notebook 进行进一步改写优化：
-
-1. **对照课程选取**：根据 Notebook 主题，搜索斯坦福等大学的同类课程（如 CS224N、CS231N、CS234、CS329A 等），获取课程大纲、讲义、阅读清单
-2. **逐篇对照分析**：将用户 Notebook 与课程对应章节对比，识别可补充和改进的知识点
-3. **改写优化**：
-   - 补充课程中更深入的理论推导（如 MIT 的数学推导风格）
-   - 融入课程中更直观的实验设计（如 Berkeley 的实验驱动风格）
-   - 增加课程中涉及但用户 Notebook 缺少的前沿论文引用
-   - 标注内容来源（如「本节理论推导参考 Stanford CS224N Lecture 5」）
-4. **保持用户内容主体**：改写以用户原有 Notebook 为主线，对照课程为补充和优化，不喧宾夺主
-5. **斯坦福优先**：对照课程选择优先级为 斯坦福 > MIT > CMU > UC Berkeley
-
-### 模式二：大学课程学术教程
+## 工作模式：大学课程学术教程
 **用户给定研究方向和学习内容，自动生成基于大学公开课程的学术级教程网站。**
 
 **默认中文**：所有 Notebook、研读笔记、侧边栏、欢迎页均以中文生成。如需英文版本，用户须显式告知（如「也要英文版」），届时生成 `notebooks-en/` 英文镜像目录和 `NOTES.en.md` 英文研读笔记。
@@ -72,12 +49,12 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 - **学术严谨**：每个知识点必须有论文出处，引用最新相关论文
 - **代码作业**：不只理论，每篇 Notebook 必须有可运行的代码实现和作业练习
 - **图片可视化**：每个核心概念配 matplotlib 生成的图表或论文配图
-- **模板一致**：使用与模式一相同的 React + Vite 前端模板
+- **模板一致**：统一使用 modern-llm-notebook 的 React + Vite 前端模板
 - **多课程交叉对照改写**：以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程，取长补短进一步改写优化
 
 #### 多课程交叉对照改写流程
 
-模式二不仅从单一课程生成，还支持**对照多个国外大学同类课程进行改写优化**：
+不仅从单一课程生成，还支持**对照多个国外大学同类课程进行改写优化**：
 
 **Step 1：主线课程选取（斯坦福优先）**
 1. 根据用户研究方向，搜索斯坦福相关课程（如 CS329A、CS224N、CS231N、CS330、CS25 等）
@@ -109,7 +86,7 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 **引用真实性硬规则（防幻觉）**：
 - 每条引用写入 Notebook 前，**必须用 WebSearch/WebFetch 打开 arXiv 页面核实**：标题、作者、年份、arXiv ID 四项一致才可写入；
 - **严禁凭记忆编造论文标题、作者或 arXiv ID**——无法核实的引用直接删除，宁缺毋假；
-- 课程编号同样要核实（课程号每年会调整，如 MIT 6.5940 曾为 6.S193/6.5940 演变），以课程官网当年页面为准。
+- 课程编号同样要核实（课程号每年会调整），以课程官网当年页面为准。
 
 **Step 5：前沿论文增强（2025–2026 科研需要）**
 1. 搜索各课程最新学期的阅读清单
@@ -136,8 +113,8 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 
 **常用课程入口（含 2025–2026 热门课，检索后仍须核实当年课程号）：**
 - 斯坦福：`cs.stanford.edu/academicprograms/courses`，或直接搜 `stanford.edu/cs{课程号}`；热门：CS224N（NLP/LLM）、CS231N（CV）、CS336（Language Modeling from Scratch）、CS330（多任务与元学习）、CS25（Transformers United）
-- MIT：`ocw.mit.edu`，或 `mit.edu/6.{课程号}`；热门：6.S191（深度学习导论，每年更新 LLM 内容）、6.5940（TinyML 高效深度学习）、6.867（ML 基础）
-- CMU：cs.cmu.edu/~{课程号}；热门：10-701/10-708（ML/深度学习）、11-711（NLP）
+- MIT：`ocw.mit.edu`，或 `mit.edu/6.{课程号}`；热门：6.S191（深度学习导论）、6.5940（TinyML 高效深度学习）、6.867（ML 基础）
+- CMU：`cs.cmu.edu/~{课程号}`；热门：10-701/10-708（ML/深度学习）、11-711（NLP）
 - Berkeley：`cs.berkeley.edu/~{教授名}/{课程号}`；热门：CS285（深度 RL）、CS294
 - 其他可参考：Princeton COS 597G（理解大语言模型）、国内高校公开课（可选补充，须核实公开许可）
 
@@ -146,14 +123,12 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 ## 何时使用
 
 当用户需要：
+- **基于研究方向生成大学课程级别的学术教程**
+- **复刻斯坦福等大学公开课程为交互式教程**
+- **对照多所大学同类课程进行交叉改写优化**
 - 创建一个基于 Jupyter Notebook 的在线教程/课程网站
-- 将 .ipynb 笔记本转化为可浏览的网页教程
 - 需要中英双语支持的学习平台
 - 构建带有代码高亮、数学公式、笔记功能的教程网站
-- **基于研究方向生成大学课程级别的学术教程**（模式二）
-- **复刻斯坦福等大学公开课程为交互式教程**（模式二）
-- **对照多所大学同类课程进行交叉改写优化**（模式一/二均支持）
-- 需要笔记高亮、书签、搜索筛选、大纲导航等完整学习体验
 
 ## 技术栈
 
@@ -162,42 +137,8 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 - **数学公式**: KaTeX
 - **图标**: Lucide React
 - **核心功能**: 直接渲染 .ipynb 文件，无需后端
-- **增强功能**: 笔记高亮、书签、搜索筛选、代码折叠、图片灯箱、大纲导航、预取缓存
 
-## 项目结构
-
-### 模式一结构（自有 Notebook）
-
-```
-tutorial-site/
-├── notebooks/           # 教程笔记本
-│   ├── part1-image-processing/
-│   │   ├── 01-digital-image-acquisition/
-│   │   │   ├── practice.ipynb
-│   │   │   └── lena.jpeg
-│   │   └── 06-geometric-transformation/
-│   │       └── practice.ipynb
-│   ├── part2-optimization-3d/
-│   └── appendix/        # 附录：拓展主题
-├── web/                 # React/Vite 前端
-│   └── src/
-│       ├── components/  # React 组件
-│       ├── data/        # 数据配置与渲染逻辑
-│       ├── hooks/       # 自定义 Hooks
-│       ├── context/     # React Context
-│       ├── styles/      # 全局样式
-│       ├── App.jsx
-│       ├── config.js
-│       └── main.jsx
-├── .github/workflows/
-├── utils.py             # 基础设施（中文路径、随机种子、中文字体）
-├── requirements.txt
-├── README.md            # 中文文档
-├── README.en.md         # 英文文档
-└── LICENSE
-```
-
-### 模式二结构（大学课程）
+## 项目结构（大学课程）
 
 ```
 university-course-site/
@@ -211,21 +152,27 @@ university-course-site/
 │   ├── part2-advanced/
 │   └── part3-frontiers/
 ├── notebooks-en/            # 英文镜像（仅在用户要求时生成）
+│   └── （与 notebooks/ 结构相同）
 ├── papers/                   # 论文研读笔记
-│   └── lecture-XX/
-│       ├── NOTES.md          # 中文研读笔记（默认）
-│       └── NOTES.en.md       # 英文研读笔记（仅在用户要求时生成）
-├── web/                      # React/Vite 前端（与模式一相同）
+│   ├── lecture-01/
+│   │   ├── NOTES.md          # 中文研读笔记（默认）
+│   │   └── NOTES.en.md       # 英文研读笔记（仅在用户要求时生成）
+│   └── lecture-02/
+│       └── ...
+├── web/                      # React/Vite 前端（modern-llm-notebook 模板）
 ├── scripts/
 │   └── download_papers.py
+├── llm_client.py
 ├── .github/workflows/
-├── README.md / README.en.md
+│   └── deploy.yml
+├── README.md                # 中文文档
+├── README.en.md             # 英文文档
 └── LICENSE
 ```
 
 ---
 
-## 模式二：大学课程学术教程生成指南
+## 大学课程学术教程生成指南
 
 ### 1. 课程调研与结构设计
 
@@ -248,7 +195,7 @@ university-course-site/
 - 按课程大纲分为 3-5 个部分（Part）
 - 每个部分包含 3-6 节课（Lecture）
 - 每节课对应 1 个 practice.ipynb（主练习）
-- 可选 1 个 practice_extra.ipynb（拓展练习）—— **拓展内容优先收入附录**
+- 可选 1 个 practice_extra.ipynb（拓展练习）
 - 总计 10-20 个 Notebook
 
 ### 2. 教学契约（Teaching Contract）
@@ -261,7 +208,7 @@ university-course-site/
 
 1. **直觉理解**（Markdown）：用通俗语言和类比解释核心概念
 2. **手算验证**（Markdown + Code）：用小规模数据手动推导，再用代码验证
-3. **代码实现**（Code Cell）：从零实现核心算法，不依赖封装库
+3. **代码实现**（Code Cell）：教学核心层从零实现核心算法；实际应用层可直接使用现代生态库（见「6. 代码要求」）
 4. **实验观察**（Code + Output）：用真实或合成数据运行实验，可视化结果
 
 **每个 Notebook 必须包含：**
@@ -282,7 +229,7 @@ university-course-site/
 
 1. **Intuition（直觉）** — 在公式之前建立直觉。使用类比、真实世界例子、「为什么这很重要？」
 2. **Manual Calculation（手算验证）** — 小数字例子，读者可以手工验证（例如 InfoNCE 的 batch_size=2，双边滤波的 3×3 邻域）
-3. **Code Implementation（代码实现）** — 零依赖实现，含 assert 验证，固定随机种子
+3. **Code Implementation（代码实现）** — 教学核心层零依赖实现，含 assert 验证，固定随机种子
 4. **Experiment & Observation（实验与观察）** — 可视化，带 `★ Key Observation` 标注，将输出与概念联系起来
 
 #### 教学风格参考（walkinglabs.github.io）
@@ -424,8 +371,18 @@ _图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[Deep
 ```python
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Noto Sans CJK SC', 'WenQuanyi Micro Hei', 'DejaVu Sans']
+matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Noto Sans CJK SC', 'WenQuanYi Micro Hei', 'DejaVu Sans']
 matplotlib.rcParams['axes.unicode_minus'] = False
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+ax.plot(x, y, label='训练奖励', color='#ea580c', linewidth=2)
+ax.set_xlabel('训练步数')
+ax.set_ylabel('奖励')
+ax.set_title('PPO 训练曲线')
+ax.legend()
+plt.tight_layout()
+plt.savefig('training_curve.png', dpi=150, bbox_inches='tight')
+plt.show()
 ```
 
 ### 8. 前沿论文集成
@@ -469,6 +426,7 @@ def md_cell(source):
     return {"cell_type": "markdown", "metadata": {}, "source": source}
 
 def code_cell(source):
+    # Same as md_cell but with code type
     cell = md_cell(source)
     cell["cell_type"] = "code"
     cell["execution_count"] = None
@@ -485,6 +443,16 @@ def build_notebook(cells, kernel="python3"):
         "nbformat": 4,
         "nbformat_minor": 5
     }
+
+# Usage
+cells = [
+    md_cell("# Chapter Title\n\n## Intuition\n..."),
+    code_cell("import numpy as np\n..."),
+]
+nb = build_notebook(cells)
+Path("notebooks/part1-xxx/01-topic.ipynb").write_text(
+    json.dumps(nb, ensure_ascii=False, indent=1), encoding='utf-8'
+)
 ```
 
 ### 10. 预渲染输出
@@ -498,14 +466,18 @@ def build_notebook(cells, kernel="python3"):
 
 ### 11. 参考模板
 
-以下仓库是本模式的标杆参考：
+以下三个仓库是本模式的标杆参考：
 
 | 仓库 | 特点 | 课程来源 |
 |------|------|----------|
 | [self-improving-agent-notebook](https://github.com/walkinglabs/self-improving-agent-notebook) | 17个可运行Notebook，论文研读笔记，零依赖实现 | Stanford CS329A |
 | [hands-on-world-models](https://github.com/walkinglabs/hands-on-world-models) | 10章57页，LaTeX图注，arXiv引用 | 原创 |
 | [hands-on-modern-rl](https://github.com/walkinglabs/hands-on-modern-rl) | 26章，VitePress，GIF/SVG图，PDF构建 | 原创 |
-| [Hands-On-Computer-Vision](https://github.com/ZOUMDA28/Hands-On-Computer-Vision) | 笔记高亮、书签、搜索、橙色主题、完整 Welcome 页 | 华中科技大学内部教程 |
+
+**从这些模板中学习的关键模式：**
+- CS329A 模板：论文→代码的转化流程，papers/ 目录，研读笔记
+- World Models 模板：`[[作者, 年份]](链接)` 引用格式，图注出处
+- Modern RL 模板：章节+附录结构，GIF/SVG/WEBP 多媒体，TikZ→SVG
 
 ---
 
@@ -515,256 +487,68 @@ def build_notebook(cells, kernel="python3"):
 
 | 组件 | 功能 |
 |------|------|
-| `Sidebar.jsx` | 左侧边栏导航，搜索、筛选（书签/笔记）、自适应 footer |
-| `NotebookViewer.jsx` | Notebook 渲染器，右侧大纲(TOC)、上一篇/下一篇导航、文本高亮、笔记批注、代码复制 |
-| `Welcome.jsx` | 首页欢迎页，Hero banner、统计栏、特性条、学习路径、精选 Notebook 卡片网格 |
-| `NotesPanel.jsx` | 笔记和书签管理面板，按章节分组，支持导出导入 |
-| `SettingsPanel.jsx` | 设置面板（主题切换、字号调整） |
-| `ImageLightbox.jsx` | 图片灯箱查看器，点击放大 |
-| `ImageLightbox` (hook) | `useImagePreview` 自定义 Hook，管理图片预览状态 |
-
-### 核心 Hooks
-
-| Hook | 功能 |
-|------|------|
-| `useNotesAndBookmarks.js` | 笔记与书签的增删改查、localStorage 持久化、导入导出 |
-| `useSettings.js` | 设置项（主题、字号）的读写与持久化 |
-| `useTheme.js` | 主题切换逻辑，系统主题检测 |
-
-### 核心 Context
-
-| Context | 功能 |
-|---------|------|
-| `SettingsContext.jsx` | 全局设置与主题状态 Provider |
+| `Sidebar.jsx` | 左侧边栏导航，按部分组织教程，章节号正序排列 |
+| `NotebookViewer.jsx` | Notebook 渲染器，显示内容和右侧大纲 |
+| `Welcome.jsx` | 首页欢迎页，展示课程概览 |
+| `NotesPanel.jsx` | 笔记和书签管理面板 |
+| `SettingsPanel.jsx` | 设置面板（主题、字号） |
+| `ImageLightbox.jsx` | 图片灯箱查看器 |
 
 ### 核心数据模块
 
-**data/notebooks.js** — 渲染引擎核心：
+**data/notebooks.js**:
 - 使用 `import.meta.glob('../../../notebooks/**/*.ipynb', { query: '?raw', import: 'default' })` 动态加载
 - 嵌套路径正则匹配：`rootDir/([^/]+)/(.+?)\.ipynb$`
 - 计算 imageBase 路径用于图片 URL 重写
-- `getChapterOrder(dir)` 从目录名前导数字推导排序（零维护，避免 999 事故）
-- `getChapterLabel(dir)` 提取章节编号标签（`1`, `A1` 等）
-- 实现完整 Markdown 渲染（标题、列表、表格、引用、代码块、图片、链接）
-- 实现 Python 代码语法高亮（自定义解析器，非 highlight.js 依赖）
+- `CHAPTER_ORDER` 映射表控制章节排序（连续编号1-N，不按部分重置）
+- 每个条目包含 `chapterOrder` 字段，`getCatalog()` 必须传递此字段
+- 实现 Markdown 渲染（标题、列表、表格、引用、代码块）
+- 实现 Python 代码高亮
 - 实现 Notebook 单元格渲染（markdown cell, code cell, output）
-- 支持 KaTeX 数学公式渲染（行内 `$...$` 与块级 `$$...$$`）
-- 实现内存缓存（`notebookCache` Map）和空闲预取（`prefetchNotebook`）
-- 代码折叠：`CODE_PREVIEW_LINES = 28`，超过则显示"展开全部"按钮
-- 输出折叠：超过 28 行输出显示"展开全部输出"按钮
-- 代码复制按钮：VS Code 风格红黄绿圆点 + 复制/勾选动画
-- 过滤 matplotlib 字体警告：`filterDisplayWarnings()`
+- 支持 KaTeX 数学公式渲染
+- 实现内存缓存和预取机制
 
-**data/sidebar.js** — 首页卡片数据：
-- `PATH_STEPS`：学习路径定义（编号、标题、描述、section 标识）
-- `RUNNABLE_NOTEBOOKS`：精选 Notebook 卡片数据（id、notebookId、标题、描述、section、时长）
-- `notebookId` 必须与 `notebooks.js` 生成的真实 ID 匹配
-
-### config.js（仓库配置与启动按钮）
-
-**config.js** 集中管理 GitHub 仓库信息和外部平台链接。
-
-```javascript
-export const GITHUB_OWNER = 'ZOUMDA28'
-export const GITHUB_REPO = 'Hands-On-Computer-Vision'
-export const GITHUB_BRANCH = 'main'
-```
-
-**启动按钮（Launch Links）**：`getNotebookLaunchLinks(meta, notebookId)` 返回一个数组，控制 Notebook 顶部显示的外部平台按钮。
-
-- **保留按钮**：函数返回 `[{ id: 'github', ... }, { id: 'colab', ... }]`
-- **去掉按钮**：将函数改为 `return []`，按钮区域不渲染
-- **去掉后必须同步文案**：`Welcome.jsx` 中凡提及相关平台的文字都要改掉
+**data/sidebar.js**:
+- 定义学习路径（PATH_STEPS）
+- 定义精选笔记本（RUNNABLE_NOTEBOOKS）
+- lessonId 必须与 notebooks.js 生成的 ID 匹配
 
 ### Vite 配置
 
 **vite.config.js** 关键配置：
-- 自定义虚拟模块插件 `notebookCatalogPlugin()`
-- 虚拟模块 ID：`virtual:notebook-catalog`
+- 自定义虚拟模块插件 `virtual:notebook-catalog`
 - 递归扫描 notebooks 目录，生成 catalog
 - 嵌套路径正则：`rel.match(/^([^/]+)\/(.+)\.ipynb$/)`
 - ID 生成：`idPath.replace(/\//g, '-')`
 - 从 Notebook JSON 提取第一个 `#` 标题作为显示标题
-- 开发模式：监听 notebooks 目录变化，新增/修改/删除 .ipynb 时自动热重载
 - 构建输出到 `../docs` 目录
-- `base: './'` 确保相对路径（GitHub Pages 子路径兼容）
-- `server.fs.allow` 允许访问 repo 根目录（读取 notebooks 用）
-
-### Welcome 页面结构
-
-Welcome 页是用户进入网站的第一印象，包含以下区块（从上到下）：
-
-1. **Hero Banner** — 大标题、副标题、CTA 按钮（开始学习 / GitHub / 浏览学习路径）、特性 checklist、代码窗口装饰图
-2. **Stats Bar** — 4 个统计卡片（Notebook 数、学习路径数、核心算法数、GitHub Stars）
-3. **Features Strip** — 4 个特性图标卡片（可运行 Notebook / 代码级图解 / 循序渐进 / 实践导向）
-4. **Learning Path** — 学习路径大卡片（2 个路径，带图标、描述、Notebook 数量）
-5. **Runnable Notebooks Grid** — 精选 Notebook 卡片网格（每个卡片：SVG 图标 + 标题 + 描述 + 标签 + 时长）
-6. **Footer** — 引用语
-
-**自定义 SVG 图标**：每个 Notebook 卡片配一个专属 SVG 图标，放在 `NOTEBOOK_SVGS` 对象中，用 `nb-1`、`nb-2` 等 id 索引。图标风格：60×60 视口，主题相关的抽象图形，带 opacity 渐变。
-
-### 笔记与高亮功能
-
-这是学习教程网站的核心增强功能，支持读者在阅读时做笔记和高亮。
-
-**核心概念：**
-
-| 概念 | 说明 |
-|------|------|
-| **Bookmark（书签）** | 收藏整 Notebook，侧边栏可筛选 |
-| **Highlight（高亮）** | 选中文本 → 高亮，黄色背景，可删除 |
-| **Note（笔记）** | 选中文本 → 添加笔记，蓝色虚线下划线锚点，点击弹出编辑器 |
-| **Section（章节）** | 笔记关联的 H2/H3/H4 标题，用于笔记分组 |
-
-**数据结构：**
-
-```javascript
-// notes: { [notebookId]: [ { id, sectionId, sectionTitle, quote, text, anchor, updatedAt } ] }
-// bookmarks: { [notebookId]: title }
-```
-
-**锚定机制（text-offset-v1）：**
-- 记录文本块索引 `blockIndex` 和字符偏移 `startOffset` / `endOffset`
-- 优先用锚定定位，失败则回退到文本搜索（quote 匹配）
-- 高亮和笔记使用不同的 mark 样式：`.user-highlight`（黄底）vs `.note-anchor`（蓝色虚线下划线）
-
-**选择工具栏（Selection Toolbar）：**
-- 选中文本后在上方弹出浮动工具栏
-- 三个按钮：复制 / 笔记 / 高亮
-- 高亮按钮在不可高亮区域（代码、公式、图片等）时禁用
-
-**笔记编辑器（Note Editor Popup）：**
-- 弹窗式编辑器，显示引用文本、章节标题、笔记文本域
-- 保存 / 取消 / 删除按钮
-- 小屏（≤640px）自动切换为 bottom-sheet 模式
-
-**Notes Panel：**
-- 独立页面展示所有笔记和书签
-- 按 Notebook 分组，显示每篇的笔记数量
-- 支持导出为 JSON 和从文件导入
-- 支持清空全部数据
-
-### 大纲导航（TOC）
-
-Notebook 右侧显示大纲导航：
-
-- 从渲染后的 HTML 提取 h2/h3/h4 标题生成 TOC
-- 滚动监听（scroll spy）高亮当前阅读位置
-- 点击 TOC 项平滑滚动到对应标题
-- TOC 项有笔记时显示蓝色小圆点提示
-- 桌面端固定在右侧，移动端悬浮弹窗
-- `toc-toggle` 按钮控制展开/收起
-
-### 预取与缓存机制
-
-为了提升切换 Notebook 的体验：
-
-- **内存缓存**：`notebookCache` Map，已加载过的 Notebook 直接复用
-- **空闲预取**：打开当前 Notebook 后，用 `requestIdleCallback` 预取下一篇
-- 缓存命中时同步 set state，完全跳过 loading 状态
-- 未命中时异步加载，显示 spinner
+- `base: './'` 确保相对路径
 
 ### 主题自定义
 
-修改 `web/src/styles/index.css` 中的 CSS 变量。
-
-**页面背景色**：改 `--bg-app` 即可，它是 `html, body` 的 `background` 值。
-
-**完整主题覆盖示例（橙色系）** — 在 `index.css` 末尾追加：
+修改 `web/src/styles/index.css` 中的 CSS 变量。橙色主题示例：
 
 ```css
-/* ==========================================================================
-   项目主题覆盖：橙色
-   ========================================================================== */
-
 :root {
-  /* 背景：暖橙色系 */
-  --bg-app: #fff7ed;
-  --bg-sidebar: #fffdf9;
-  --bg-sidebar-footer: rgba(255, 237, 213, 0.45);
-  --bg-input: #fffaf4;
-  --bg-hover: rgba(255, 237, 213, 0.7);
-  --bg-active: rgba(254, 215, 170, 0.55);
-
-  /* 边框：带一点暖色 */
-  --border-subtle: rgba(194, 65, 12, 0.06);
-  --border-light: rgba(194, 65, 12, 0.12);
-  --border-divider: rgba(194, 65, 12, 0.08);
-
-  /* 主色 */
   --accent: #ea580c;
-  --accent-soft: rgba(234, 88, 12, 0.1);
-
-  /* 滚动条 */
-  --scrollbar-thumb: #fed7aa;
-  --scrollbar-thumb-hover: #fdba74;
-
-  /* 品牌 */
+  --accent-soft: rgba(234, 88, 12, 0.09);
   --brand-gradient-from: rgba(234, 88, 12, 0.11);
-  --brand-gradient-to: rgba(251, 146, 60, 0.14);
+  --brand-gradient-to: rgba(251, 146, 60, 0.12);
   --brand-accent: #ea580c;
-
-  /* 代码 / 引用 / 表格 */
-  --code-inline-bg: #fff2e4;
-  --code-inline-border: rgba(234, 88, 12, 0.1);
+  --code-inline-bg: #fff7ed;
   --code-inline-text: #c2410c;
-  --blockquote-bg: #fff6ec;
-  --blockquote-border: rgba(234, 88, 12, 0.16);
-  --table-header-bg: #fffaf3;
-  --table-even-row: #fffcf8;
-  --toc-hover-bg: rgba(255, 247, 237, 0.8);
+  --blockquote-bg: #fff7ed;
+  --blockquote-border: rgba(234, 88, 12, 0.1);
 }
 
 [data-theme="dark"] {
-  --bg-app: #17110c;
-  --bg-card: rgba(38, 28, 21, 0.94);
-  --bg-sidebar: #1d1610;
-  --bg-sidebar-footer: rgba(29, 22, 16, 0.6);
-  --bg-input: #251c15;
-  --bg-hover: rgba(59, 42, 30, 0.6);
-  --bg-active: rgba(80, 56, 36, 0.5);
-
-  --border-subtle: rgba(255, 237, 213, 0.07);
-  --border-light: rgba(255, 237, 213, 0.12);
-  --border-divider: rgba(255, 237, 213, 0.07);
-
   --accent: #fb923c;
-  --accent-soft: rgba(251, 146, 60, 0.14);
-
-  --scrollbar-thumb: #4a3728;
-  --scrollbar-thumb-hover: #6b5140;
-
-  --brand-gradient-from: rgba(251, 146, 60, 0.12);
-  --brand-gradient-to: rgba(253, 186, 116, 0.12);
+  --accent-soft: rgba(251, 146, 60, 0.12);
+  --brand-gradient-from: rgba(251, 146, 60, 0.11);
+  --brand-gradient-to: rgba(255, 180, 0, 0.12);
   --brand-accent: #fb923c;
-
-  --code-inline-bg: rgba(194, 65, 12, 0.18);
-  --code-inline-border: rgba(251, 146, 60, 0.14);
-  --code-inline-text: #fdba74;
-  --blockquote-bg: rgba(234, 88, 12, 0.1);
-  --blockquote-border: rgba(251, 146, 60, 0.22);
-  --table-header-bg: rgba(255, 255, 255, 0.05);
-  --table-even-row: rgba(255, 255, 255, 0.02);
-  --toc-hover-bg: rgba(255, 255, 255, 0.05);
-  --modal-bg: #251c15;
 }
 ```
-
-**组件内字面颜色类映射**（换主题色时必须同步改）：
-
-| 原蓝色系 | 改为橙色系 | 说明 |
-|---------|-----------|------|
-| `blue-*` | `orange-*` | 主色系列 |
-| `cyan-*` / `sky-*` | `amber-*` | 辅助亮色 |
-| `purple-*` / `violet-*` | `rose-*` | 对比强调色 |
-| `indigo-*` | `orange-*` | 深色强调 |
-| `from-blue-*` | `from-orange-*` | 渐变起始色 |
-| `to-cyan-*` | `to-amber-*` | 渐变结束色 |
-| `text-blue-*` | `text-orange-*` | 文字色 |
-| `border-blue-*` | `border-orange-*` | 边框色 |
-| `bg-blue-*` | `bg-orange-*` | 背景色 |
-
-**Welcome 页的 SECTION_STYLES**：每个学习路径 section 有独立配色对象，包含 `bg`、`tag`、`iconBg`、`pathBorder`、`gradient`、`soft` 等字段，换主题时全部同步更新。
 
 ---
 
@@ -786,7 +570,7 @@ Notebook 右侧显示大纲导航：
 import re
 from pathlib import Path
 
-REF, OUR = Path('参考模板/web/src'), Path('web/src')
+REF, OUR = Path('参考模板/web/src'), Path('web/src')   # 设计系统来源 / 本项目
 
 def classes_in_css(p):
     return set(re.findall(r'\.([A-Za-z_][\w-]*)', p.read_text(encoding='utf-8', errors='ignore')))
@@ -814,7 +598,9 @@ print('变量缺失:', sorted(v for v in used_vars if v not in defined_vars(OUR 
 ```
 
 **结论**：宁可**完整移植**参考模板的 `index.css`（通常 2500+ 行，含设计系统与 KaTeX），
-也不要手工裁剪；裁剪后必须用上面的脚本对账。
+也不要手工裁剪；裁剪后必须用上面的脚本对账。典型缺失包括 `.viewer`、`.toc-*`、
+`.sidebar-*`、`.notes-*`、`.modal-*`、`.brand-*`、`.image-lightbox` 以及
+`--bg-sidebar`、`--text-primary`、`--bg-active`、`--border-light` 等变量。
 
 ### 2. KaTeX 样式必须随包内置
 
@@ -829,16 +615,61 @@ print('变量缺失:', sorted(v for v in used_vars if v not in defined_vars(OUR 
 
 校验：构建产物目录里应出现 `KaTeX_*.woff2`，且 `index.html` 中不再有 katex CDN 链接。
 
+### 2b. Welcome 页的数学公式用 MathJax（按需）
+
+Notebook 正文的公式由 **KaTeX** 在构建期渲染；而首页/欢迎页若需要写公式，
+参考模板的做法是在 `index.html` 里配置 **MathJax**（`startup.typeset = false`，按需触发）：
+
+```html
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']], processEscapes: true },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] },
+  startup: { typeset: false }
+}
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+```
+
+**权衡**：MathJax 走 CDN 会在受限网络下失效。若欢迎页确实没有公式，**就不要引入它**（少一个外部依赖）；
+若需要公式且要求离线可用，改为把 MathJax 作为 npm 依赖打包进产物。
+
 ### 3. 自定义 Markdown 渲染器的四条硬约束
 
 前端自行实现了 Markdown 渲染（`data/notebooks.js`），它比标准 Markdown 严格：
 
 | 约束 | 说明 | 违反后果 |
 |------|------|----------|
-| 表格分隔行**至少 3 个短横线** | 判定用 `/^:?-{3,}:?$/` | 整张表格渲染失败 |
+| 表格分隔行**至少 3 个短横线** | 判定用 `/^:?-{3,}:?$/`，`\|:--:\|` 只有 2 个 | 整张表格渲染失败，页面显示裸的 `\| a \| b \|` 文本 |
 | 表格与引用**逐行**解析 | 行内语法不能跨行 | `**加粗**` 跨行断开 → 显示字面 `**` |
 | 需显式支持 `\*` `\_` 转义 | 未实现时反斜杠原样输出 | 标题显示成 `CIEL\a\b\*` |
-| 图片相对路径按 `BASE_URL + notebooks/<partDir>/<dir>/` 重写 | 不要写 `images/xxx.png` | 插图 404 |
+| 图片相对路径按 `BASE_URL + notebooks/<partDir>/<dir>/` 重写 | 不要写 `images/xxx.png`，除非该目录真实存在 | 插图 404 |
+
+**批量自检**（写完所有 Notebook 后跑一次，应为 0 问题）：
+
+```python
+import json, os, re
+from pathlib import Path
+SEP = re.compile(r'^:?-{3,}:?$')
+for root, _, files in os.walk('notebooks'):
+    for f in files:
+        if not f.endswith('.ipynb'):
+            continue
+        nb = json.loads((Path(root) / f).read_text(encoding='utf-8'))
+        for i, c in enumerate(nb['cells']):
+            if c['cell_type'] != 'markdown':
+                continue
+            text = ''.join(c['source'])
+            if text.count('$$') % 2:
+                print('$$ 未配对', root, i)
+            for blk in re.findall(r'(?:^\|.*\n)+', text, re.M):
+                rows = blk.strip().split('\n')
+                if len(rows) < 2:
+                    continue
+                cells = [x.strip() for x in rows[1].strip().strip('|').split('|')]
+                if not all(SEP.match(x) for x in cells):
+                    print('分隔行不合规', root, i, cells)
+```
 
 ### 4. 页面标题不要重复
 
@@ -861,20 +692,18 @@ if (cell.cell_type === 'markdown') {
 
 两类典型 bug：
 
-1. **prop 名不匹配**：父组件传 `onSelect`，子组件却解构 `onSelectNotebook` → 点击报错
-2. **id 拼接错误**：子组件把 `lessonId` 拼成路径，与真实 id 不一致 → 点击无反应
+1. **prop 名不匹配**：父组件传 `onSelect`，子组件却解构 `onSelectNotebook` → 点击报错、全站卡片失效。
+2. **id 拼接错误**：子组件把 `lessonId` 拼成 `part1-xxx/<lessonId>.ipynb`，与真实 id 不一致 → 点击无反应。
 
-正确做法：卡片数据直接存**真实 notebook id**（`notebookId` 字段），点击时 `onSelect(nb.notebookId)`；
+正确做法：卡片数据直接存**真实 notebook id**，点击时 `onSelect(nb.notebookId)`；
 另设一个纯视觉用的 `id`（如 `nb-1`）去索引图标与配色。
 
-### 6. 笔记功能相关排错
-
-| 症状 | 原因 | 处理 |
-|------|------|------|
-| 选中文字不弹出工具栏 | 鼠标 up 事件在非 notebook 内容区域 | 检查 `notebookContentRef.current.contains(range.commonAncestorContainer)` |
-| 高亮后刷新页面消失 | 未保存到 localStorage | 检查 `saveNote` 是否被调用、`useNotesAndBookmarks` 是否正确持久化 |
-| 笔记锚点定位偏移 | Notebook 内容变更后 anchor 不再匹配 | 确保有 quote 回退机制（文本搜索定位） |
-| 笔记编辑器位置跑出屏幕 | 小屏下 top/left 计算导致溢出 | ≤640px 切换 bottom-sheet 模式（left:16px; right:16px; bottom:16px; width:auto; top:auto） |
+```javascript
+const handleNotebookSelect = (nb) => {
+  if (!nb?.notebookId || typeof onSelect !== 'function') return
+  onSelect(nb.notebookId)
+}
+```
 
 ---
 
@@ -892,7 +721,7 @@ const server = await createServer({
   server: { middlewareMode: true },
   appType: 'custom',
   logLevel: 'error',
-  optimizeDeps: { noDiscovery: true, include: [] },
+  optimizeDeps: { noDiscovery: true, include: [] },   // 关键：避免 dep-scan 报错
 })
 const mod = await server.ssrLoadModule('/src/data/notebooks.js')
 for (const item of mod.getCatalog()) {
@@ -904,7 +733,8 @@ for (const item of mod.getCatalog()) {
 await server.close()
 ```
 
-判据：`裸表格行 = 0`、`裸$$ = 0`；`<table>` 数量应与源文件中的表格数一致。
+判据：`裸表格行 = 0`、`裸$$ = 0`；`<table>` 数量应与源文件中的表格数一致
+（某章表格数明显偏少 = 有表格渲染失败）。
 
 ---
 
@@ -912,11 +742,11 @@ await server.close()
 
 **必须随仓库提供**，否则他人与 CI 都无法重跑 Notebook：
 
-| 文件 / 配置 | 作用 |
-|------------|------|
-| `utils.py` | 中文路径读写（`cv_imread`/`cv_imwrite`）、随机种子（`set_random_seed`）、中文字体（`setup_plot_chinese`）、`show_images`、`compare_results` 等 |
-| `requirements.txt` | 依赖清单（SIFT 需 `opencv-contrib-python`） |
-| conda 环境注册 ipykernel | 供 nbconvert 调用 |
+| 文件 / 配置 | 作用 | 缺失后果 |
+|------------|------|----------|
+| `utils.py` | 中文路径读写、随机种子、中文字体、`show_images`、`compare_results` 等 | 每篇 Notebook 第一格就 `ModuleNotFoundError` |
+| `requirements.txt` | 依赖清单（SIFT 需 `opencv-contrib-python`） | 环境搭不起来 |
+| conda 环境注册 ipykernel | 供 nbconvert 调用 | `No such kernel named <env>` |
 
 ```bash
 <env>/python.exe -m ipykernel install --user --name <env> --display-name "Python (<env>)"
@@ -928,6 +758,10 @@ await server.close()
 **执行流程约定**：先执行到临时文件 `exec_tmp.ipynb`，校验「0 个 error cell、代码格都有输出」
 后再覆盖 `practice.ipynb`——执行失败时不会破坏源文件。
 
+**写 assert 的原则**：断言"关系"，不要写脆弱的手工常数。例如可分离卷积与二维卷积
+**只在内部区域严格相等**（两次一维卷积各自填充，边界必然有差异）；
+不同边界策略会让边缘像素变亮/变暗——这类结论写成"内部区域 MAE < 1e-12"或 `A < B` 更稳。
+
 ---
 
 ## 症状 → 原因 → 处理 速查表
@@ -938,18 +772,13 @@ await server.close()
 | 公式无样式、排版错乱 | KaTeX CSS 走 CDN 且不可达 | 入口 CSS `@import "katex/dist/katex.min.css"` |
 | 页面出现裸的 `\| a \| b \|` | 表格分隔行不足 3 个短横线 | 统一改为 `\|:---:\|` |
 | 标题显示两次 | 正文 H1 与页面标题重复 | 渲染时剥离正文首个 H1 |
-| 侧边栏编号显示 999 | 排序映射表用标题做键、却拿目录名去查 | 改为从目录名前导数字推导 |
+| 侧边栏编号显示 999 | 排序映射表用中文标题做键、却拿目录名去查 | 改为从目录名前导数字推导 |
 | 侧边栏出现重复条目 | 同一主题同时放了 practice 与 practice_extra | 每个学习要点只留一个，拓展进附录 |
 | 首页卡片点击无反应 | prop 名不匹配 / lessonId 拼出的路径不存在 | 传 `onSelect` 并用真实 notebook id |
 | 正文出现 `**`、`\*` | 转义未支持或强调跨行断开 | 补齐转义、避免跨行强调 |
 | 插图 404 | Markdown 写了不存在的 `images/` 前缀 | 与实际图片目录对齐 |
 | 部署慢、产物巨大 | 大体量数据集被复制进站点产物 | `rsync --exclude='*.ppm' --exclude='*.3Dpoints'` |
-| Notebook 跑不起来 | 缺 `utils.py` / 内核未注册 / 缺依赖 | 补齐基础设施并指定内核执行 |
-| 去掉启动按钮后文案不符 | 只改了 `config.js`，未同步组件文案 | 同步修改 `Welcome.jsx` 中的相关文案 |
-| 选中文本不弹工具栏 | 鼠标 up 事件在非内容区 / 选中区域含代码 | 检查 `canHighlightTextRange` 逻辑 |
-| 笔记刷新后丢失 | 未持久化到 localStorage | 检查 `useNotesAndBookmarks` 初始化逻辑 |
-| TOC 滚动不高亮 | scroll spy 未正确绑定 / 选择器不对 | 检查 `updateActiveHeading` 与 `requestAnimationFrame` |
-| 代码复制按钮无反应 | copy 事件被拦截 / 降级路径未执行 | 确保 `execCommand('copy')` 降级路径存在 |
+| Notebook 跑不起来 | 缺 `utils.py` / 内核未注册 / 缺依赖 | 按上节补齐基础设施并指定内核执行 |
 
 ---
 
@@ -959,12 +788,17 @@ await server.close()
 引用的图片；删除一次性脚本；`.gitignore` 覆盖 `docs/`、`__pycache__/`、`*.ply`、
 `.ipynb_checkpoints/`、`.vscode/`、参考仓库副本目录。
 
+判定"是否为输入图"的简便方法：在 Notebook 源码里抹掉所有 `cv_imwrite(<字面量>, …)` 的首参后，
+文件名若仍出现在源码中（作为列表元素、`cv_imread` 参数或 Markdown 引用）即为需要保留的输入。
+
 **主题定制（改主色）**需同时改两处，容易漏：
 
 1. **CSS 变量**：在 `index.css` 末尾追加覆盖块（后写覆盖前写），同时覆盖 `:root` 与
-   `[data-theme="dark"]`：背景、边框、`--accent`、品牌渐变、引用块、行内代码、表格、滚动条、Modal。
-2. **组件里的字面颜色类**：`Welcome.jsx` 这类页面常用 `bg-blue-600`、`from-cyan-500` 等字面颜色，
-   它们不随变量变化。整体改橙色时做颜色映射（见上文「主题自定义」节）。
+   `[data-theme="dark"]`：背景（`--bg-app` / `--bg-sidebar` / `--bg-hover` / `--bg-active`）、
+   边框、`--accent`、品牌渐变、引用块、行内代码、表格、滚动条、Modal。
+2. **组件里的字面颜色类**：`Welcome.jsx` 这类页面常用 `bg-blue-600`、`from-cyan-500`、
+   `from-[#dbeafe]` 等字面颜色，它们不随变量变化。整体改橙色时的映射：
+   `blue→orange`、`cyan→amber`、`purple/violet→rose`、`indigo→orange`，卡片渐变的任意值同步换暖色阶。
 
 校验：构建产物 CSS 应含新色值；主包 JS 中旧色类计数为 0、新色类计数 > 0。
 
@@ -973,12 +807,12 @@ await server.close()
 ## 嵌套目录支持
 
 Notebook 可以放在任意深度的子目录中。系统会自动：
-- 递归扫描所有 .ipynb 文件（Vite 插件 + `import.meta.glob` 双重扫描）
-- 使用 `{子目录路径}-{文件名}` 作为唯一 ID（路径分隔符替换为 `-`）
+- 递归扫描所有 .ipynb 文件
+- 使用 `{子目录路径}-{文件名}` 作为唯一 ID（路径分隔符替换为 -）
 - 从 Notebook 的第一个 markdown 一级标题提取标题
 - 重写 Markdown 中的相对图片路径，指向正确的资源位置
 
-例如 `part1-image-processing/01-digital-image-acquisition/practice.ipynb` 的 ID 为 `01-digital-image-acquisition-practice`。
+例如 `part1-foundation/lecture-01-intro/practice.ipynb` 的 ID 为 `lecture-01-intro-practice`。
 
 ## 图片资源处理
 
@@ -987,7 +821,7 @@ Markdown 单元格中的相对图片路径会被自动重写：
 - 重写为 `<img src="./notebooks/part1-foundation/lecture-01-intro/training_curve.png">`
 - 绝对 URL 和 data: URI 不受影响
 
-部署时 notebooks 目录随 Vite 构建自动复制到输出目录（`import.meta.glob` 加载的 raw 资源）。
+部署时需要将 notebooks 目录复制到构建输出目录（docs/notebooks/），使图片可访问。
 
 ## 章节排序与编号
 
@@ -995,7 +829,7 @@ Markdown 单元格中的相对图片路径会被自动重写：
 
 ### 排序机制（推荐：从目录名前导数字推导）
 
-**不要**用「中文标题 → 序号」的映射表当排序键。一旦目录名与标题不一致，
+**不要**用「中文标题 → 序号」的映射表当排序键。一旦目录名与标题不一致（或标题被改写），
 查表会全部落到默认值，侧边栏编号就会集体变成 `999`（真实事故）。
 
 改为从目录名的**前导数字**推导，零维护：
@@ -1036,12 +870,23 @@ export function getCatalog() {
 
 ### 侧边栏章节号显示
 
-`Sidebar.jsx` 的 `buildSidebarSections` 用 **`numLabel`** 生成徽章：
+`Sidebar.jsx` 的 `buildSidebarSections` 用 **`numLabel`** 生成徽章（缺该字段就会显示错编号）：
 
 - 正文章节：`1`, `2`, `3` … `N` —— **不要带 `+` 号**；
 - 附录：`A1`, `A2`，单独成组排在最后。
 
-**不要用 `4+` 这类后缀**表示"拓展"。拓展内容一律进附录目录，而不是在主章节里挂一个带后缀的孪生 Notebook。
+**不要用 `4+` 这类后缀**表示"拓展"。需求方明确要求过「连续编号、不要 `+` 与"拓展"标签」；
+拓展内容一律进附录目录，而不是在主章节里挂一个带后缀的孪生 Notebook。
+
+### 也支持 CHAPTER_ORDER 映射（备选）
+
+若目录名不含序号（如 `lecture-01-intro` 之外的纯中文目录），再退回映射表方案，
+并把键设为**目录名**（而不是章节标题）——用标题做键正是"编号全变 999"事故的原因。
+
+### 添加新章节
+
+新增章节目录时以两位数字开头（如 `10-xxx`），无需改动任何映射表；
+未编号目录（如 `appendix/`）自动排到最后。
 
 ---
 
@@ -1051,7 +896,7 @@ export function getCatalog() {
 
 1. **源必须是 "GitHub Actions"**（不是 "Deploy from a branch"），在仓库 Settings → Pages 中设置
 2. 使用 `npm install`（不是 `npm ci` — 避免 package-lock.json 依赖问题）
-3. Notebooks 目录必须已存在于仓库中
+3. Notebooks 目录必须已存在于仓库中（不是从旧的中文命名目录复制）
 
 ### 工作流模板
 
@@ -1090,6 +935,18 @@ jobs:
       - uses: actions/deploy-pages@v4
 ```
 
+### 双部署策略
+
+**.github/workflows/deploy.yml** 使用双部署策略，兼容两种 Pages 源设置：
+
+- **部署方式 A**：actions/deploy-pages（Pages 源 = GitHub Actions）
+- **部署方式 B**：peaceiris/actions-gh-pages（Pages 源 = gh-pages 分支）
+
+### GitHub Pages 源设置
+
+**选项 A（推荐）**：Source = GitHub Actions
+**选项 B**：Source = Deploy from a branch → gh-pages → / (root)
+
 ### 网络/推送故障排除
 
 | 问题 | 解决方案 |
@@ -1097,7 +954,7 @@ jobs:
 | SSH 连接重置 | 切换到 HTTPS：`git remote set-url origin https://github.com/USER/REPO.git` |
 | `npm ci` 失败 | 改用 `npm install` |
 | Pages 显示原始 README | Settings → Pages → Source = "GitHub Actions" |
-| 侧边栏为空（"未找到相关章节"） | 检查 `notebooks/` 目录是否存在于仓库；检查构建后的 JS 中的 `NOTEBOOK_CATALOG` |
+| 侧边栏为空（"未找到相关章节"） | 检查 `notebooks/` 目录是否存在于仓库；检查构建后的 JS 中的 `NOTEBOOK_CATALOG`；验证 `getCatalog()` 返回非空 |
 | 章节号全为 0 | `getCatalog()` 必须包含 `chapterOrder` 字段 |
 | 强制推送被拒绝 | 使用 `--force-with-lease`（比 `--force` 更安全）；需用户确认 |
 
@@ -1106,20 +963,16 @@ jobs:
 ## Notebook 组织规范
 
 教程按部分组织，每个部分一个顶层文件夹：
-- `part1-xxx/` - 第一部分
-- `part2-yyy/` - 第二部分
-- `appendix/` - 附录（拓展主题，排最后）
+- `part1-foundation/` - 基础
+- `part2-advanced/` - 进阶
+- `part3-frontiers/` - 前沿
 
 每个部分内可以有子目录，每个子目录包含：
 - `practice.ipynb` - 主练习 Notebook
+- `practice_extra.ipynb` - 拓展练习（可选）
 - 图片资源文件（.png, .jpg, .svg）
 
 确保每个 Notebook 的第一个 markdown cell 是一级标题（# 标题），用于自动提取显示名称。
-
-**约定**：每个学习要点对应**一个** `practice.ipynb`，不设多个重复 Notebook。
-与主线关系较远的拓展内容统一收进附录（`appendix/`）。
-
----
 
 ## 增量部署
 
@@ -1129,7 +982,7 @@ jobs:
 
 ---
 
-## 最佳实践（共 40 条）
+## 最佳实践
 
 1. **教学契约**: 每篇 Notebook 遵循「直觉 → 手算 → 实现 → 实验」的学习路径
 2. **代码可读性**: 保持代码单元格短小，添加充分的中文注释
@@ -1137,46 +990,41 @@ jobs:
 4. **图片资源**: 图片放在 Notebook 同目录下，使用相对路径引用
 5. **固定种子**: 涉及随机实验时使用固定种子，确保可复现
 6. **npm install**: 在 GitHub Actions 中使用 npm install 而非 npm ci
-7. **连续章节编号**: 跨部分连续编号；`getCatalog` 必须传递 `chapterOrder` 和 `numLabel`
-8. **学术严谨**: 每个知识点必须有论文出处，使用标准引用格式
-9. **代码作业**: 每篇 Notebook 必须有可运行代码和作业练习（含 assert 验证）
-10. **论文研读**: papers/ 目录记录每节课的论文研读笔记
-11. **双层代码策略**: 教学核心层从零实现看清数学本质；实际应用层用现代生态（transformers/trl/peft/accelerate），类型注解 + 混合精度 + checkpoint 最小示例
-12. **可视化**: 每个核心概念配 matplotlib 图表或论文配图
-13. **多课程交叉对照**: 以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化
-14. **语言策略**: 模式二默认中文生成，英文版本需用户显式要求；README 同时提供中英文
-15. **质量审计**: 每批 Notebook 生成后对照质量清单审计，修复问题后再继续
-16. **批量生成**: 按模块分批生成，使用 Python 脚本程序化创建 .ipynb 文件
-17. **预渲染输出**: 本地执行 Notebook 并嵌入输出，前端无需内核即可显示结果
-18. **增量推送**: 每批完成后立即推送，GitHub Actions 自动部署
-19. **参考优先**: 任何网站任务动手前，先读参考项目 `web/` 的样式、组件、配置（强制第一步）
-20. **样式完整性对账**: 移植或精简 CSS 后必须跑到「缺失类 0、缺失变量 0」
-21. **KaTeX 随包内置**: 入口 CSS `@import "katex/dist/katex.min.css"`，不要走 CDN
-22. **渲染器更严格**: 表格分隔行至少 3 个短横线；强调不跨行；补 `\*` `\_` 转义支持
-23. **标题去重**: 渲染时剥离正文首个 H1，避免与页面标题重复
-24. **编号靠目录名**: 从目录名前导数字推导章节号；用标题做键会集体退化成 999
-25. **一个要点一个 Notebook**: 拓展内容进附录，不使用 `+` 后缀标签
-26. **首页卡片绑定真实 id**: 数据里存 `notebookId`，点击 `onSelect(nb.notebookId)`
-27. **复现三件套**: `utils.py` + `requirements.txt` + 注册 conda 环境的 ipykernel
-28. **执行走临时文件**: 先执行到 `exec_tmp.ipynb`，校验无 error 再覆盖源文件
-29. **机器验收**: 用 Vite SSR 渲染体检 + 线上 asset 校验，不要只靠肉眼看网页
-30. **部署瘦身**: 排除大体量数据集；发布前做仓库卫生清理
-31. **断言写关系**: 断言"内部区域严格相等""A < B"，不要写脆弱的手工常数
-32. **换主题色改两处**: CSS 变量覆盖 + 组件内字面颜色类映射（如 `blue→orange`）
-33. **页面背景色**: 改 `--bg-app` 即可控制整页背景
-34. **启动按钮管理**: `config.js` 的 `getNotebookLaunchLinks` 控制按钮；去掉时返回空数组，并同步 Welcome 页文案
-35. **笔记与高亮**: 提供文本高亮和笔记功能，localStorage 持久化，支持导入导出
-36. **搜索与筛选**: 侧边栏提供搜索框和书签/笔记筛选标签
-37. **预取缓存**: 空闲时预取下一篇 Notebook，切换时从缓存秒开
-38. **TOC 大纲**: 右侧大纲导航，滚动监听高亮当前位置，有笔记的标题显示提示
-39. **代码折叠复制**: 长代码块和长输出可折叠；每个代码格有复制按钮
-40. **响应式设计**: 移动端侧边栏遮罩、TOC 悬浮弹窗、笔记编辑器 bottom-sheet 模式
-41. **引用必核实**: 论文标题/作者/年份/arXiv ID 四项核实后才写入；无法核实就删除
-42. **现代工具链**: 优先 uv 管理环境；requirements.txt 锁定具体版本号
-43. **CI 校验**: GitHub Actions 重跑 Notebook，0 error 才允许合入 main
-44. **资源开销透明**: Notebook 头部注明运行时长与显存需求，提供 CPU 可跑的小规模版本
-45. **结果可信**: 多 seed 取均值±标准差；与论文数字不一致时说明原因
-46. **开源合规**: LICENSE 与引用代码兼容；论文配图标注出处；数据集注明许可
+7. **双部署策略**: 同时使用 actions/deploy-pages 和 peaceiris/actions-gh-pages
+8. **force_orphan**: gh-pages 分支使用 orphan commit，不保留构建历史
+9. **连续章节编号**: CHAPTER_ORDER 使用连续编号，不按部分重置；getCatalog 必须传递 chapterOrder
+10. **学术严谨**: 每个知识点必须有论文出处，使用标准引用格式
+11. **代码作业**: 每篇 Notebook 必须有可运行代码和作业练习（含 assert 验证）
+12. **论文研读**: papers/ 目录记录每节课的论文研读笔记
+13. **双层代码策略**: 教学核心层从零实现看清数学本质；实际应用层用现代生态（transformers/trl/peft/accelerate），类型注解 + 混合精度 + checkpoint 最小示例
+14. **可视化**: 每个核心概念配 matplotlib 图表或论文配图
+15. **多课程交叉对照**: 以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化，标注内容来源
+16. **语言策略**: 默认中文生成，英文版本需用户显式要求；README 同时提供中英文两个版本
+17. **质量审计**: 每批 Notebook 生成后对照质量清单审计，修复问题后再继续
+18. **批量生成**: 按模块分批生成，使用 Python 脚本程序化创建 .ipynb 文件
+19. **预渲染输出**: 本地执行 Notebook 并嵌入输出，前端无需内核即可显示结果
+20. **增量推送**: 每批完成后立即推送，GitHub Actions 自动部署
+21. **参考优先**: 任何网站任务动手前，先读参考项目 `web/` 的样式、组件、配置（强制第一步）
+22. **样式完整性对账**: 移植或精简 CSS 后必须跑到「缺失类 0、缺失变量 0」
+23. **KaTeX 随包内置**: 入口 CSS `@import "katex/dist/katex.min.css"`，不要走 CDN
+24. **渲染器更严格**: 表格分隔行至少 3 个短横线；强调不跨行；补 `\*` `\_` 转义支持
+25. **标题去重**: 渲染时剥离正文首个 H1，避免与页面标题重复
+26. **编号靠目录名**: 从目录名前导数字推导章节号；`getCatalog()` 传 `chapterOrder` 与 `numLabel`
+27. **一个要点一个 Notebook**: 拓展内容进附录，不使用 `+` 后缀标签
+28. **首页卡片绑定真实 id**: 数据里存 `notebookId`，点击 `onSelect(nb.notebookId)`
+29. **复现三件套**: `utils.py` + `requirements.txt` + 注册 conda 环境的 ipykernel
+30. **执行走临时文件**: 先执行到 `exec_tmp.ipynb`，校验无 error 再覆盖源文件
+31. **机器验收**: 用 Vite SSR 渲染体检 + 线上 asset 校验，不要只靠肉眼看网页
+32. **部署瘦身**: 用 `rsync --exclude` 排除大体量数据集；发布前做仓库卫生清理
+33. **断言写关系**: 断言"内部区域严格相等""A < B"，不要写脆弱的手工常数
+34. **换主题色改两处**: CSS 变量覆盖 + 组件内字面颜色类映射（如 `blue→orange`）
+35. **引用必核实**: 论文标题/作者/年份/arXiv ID 四项核实后才写入；无法核实就删除
+36. **现代工具链**: 优先 uv 管理环境；requirements.txt 锁定具体版本号
+37. **CI 校验**: GitHub Actions 重跑 Notebook，0 error 才允许合入 main
+38. **资源开销透明**: Notebook 头部注明运行时长与显存需求，提供 CPU 可跑的小规模版本
+39. **结果可信**: 多 seed 取均值±标准差；与论文数字不一致时说明原因
+40. **开源合规**: LICENSE 与引用代码兼容；论文配图标注出处；数据集注明许可
+41. **easy-llm-master 代码风格**: docstring 三段式 + 形状注释 + 消融开关 + run_name 命名规范 + checkpoint 分层保存
 
 ---
 
@@ -1186,13 +1034,13 @@ jobs:
 
 - **贴合当前科研热点**：LLM 预训练与后训练（RLHF/DPO/GRPO）、Agent 与工具调用、多模态、具身智能/世界模型、高效推理（量化/蒸馏）、AI for Science。选题过时（如纯入门 SVM 教程）时应建议用户补充前沿章节。
 - **理论—实现—工程三线并重**：科研读者不仅要公式与手写实现，还需要**工程实践视角**——显存/算力估算、训练稳定性技巧、checkpoint 管理、混合精度、分布式数据并行的最小示例。
-- **每个实验标注资源开销**：在 Notebook 头部注明预计运行时长、显存需求，并提供**CPU 可跑的小规模版本**作为兜底（Colab 免费额度有限，读者不一定有 GPU）。
+- **每个实验标注资源开销**：在 Notebook 头部注明预计运行时长、显存需求，并提供**CPU 可跑的小规模版本**作为兜底。
 
 ### 现代工具链
 
-- **包管理**：优先 `uv`（`uv pip install`、`uv venv`），生成 `requirements.txt` 时锁定具体版本号（`numpy>=1.26` 这种宽松写法在复现时会翻车）。
+- **包管理**：优先 `uv`（`uv pip install`、`uv venv`），生成 `requirements.txt` 时锁定具体版本号。
 - **Python 版本**：以 3.10–3.12 为准，避免使用已废弃 API。
-- **执行**：`jupyter nbconvert --execute` 仍是标准路径；执行环境与 `requirements.txt` 一致，CI 中可加 `uv pip install -r requirements.txt` 后重跑验证。
+- **执行**：`jupyter nbconvert --execute` 仍是标准路径；执行环境与 `requirements.txt` 一致。
 
 ### CI 自动化校验（推荐加入仓库）
 
@@ -1230,21 +1078,44 @@ CI 失败的 Notebook 不允许合入 main——防止"本地能跑、读者跑�
 ## 与 course-notebook-generator 的关系
 
 > **今后所有教程网站任务统一以本技能为唯一入口。**
-> `course-notebook-generator` 已标记为**废弃（DEPRECATED）**，仅作历史保留。
+> `course-notebook-generator` 已标记为**废弃（DEPRECATED）**，仅作历史保留；
+> 若它被加载，其开头会立即重定向到本技能。
 
-本技能是 `course-notebook-generator` 的**超集**。后者聚焦「生成课程 Notebook 并部署」的主干流程；
+本技能是 `course-notebook-generator` 的**超集**。后者聚焦「生成课程 Notebook 并部署」的主干流程
+（四步教学路径、质量清单、代码来源规则、批量生成、预渲染输出、GitHub Pages 部署）；
 本技能在主干之上补齐了：
 
-- 两种工作模式（自有 Notebook / 大学课程学术教程）与多课程交叉对照改写；
-- 语言策略与 `papers/` 论文研读笔记；
-- **前端样式与渲染排错**、**渲染体检（Vite SSR）**、**Notebook 执行与复现基础设施**；
-- **笔记高亮与书签功能**、**搜索筛选**、**预取缓存**、**TOC 大纲**、**代码折叠复制**等完整学习体验；
-- **Welcome 页完整结构**（Hero / Stats / Features / Learning Path / Notebook Cards Grid）；
-- **症状 → 原因 → 处理速查表**、**仓库卫生与主题定制**。
+- 大学课程学术教程生成流程与多课程交叉对照改写；
+- 语言策略（默认中文、英文需显式要求，README 双语）与 `papers/` 论文研读笔记；
+- **前端样式与渲染排错**、**渲染体检（Vite SSR）**、**Notebook 执行与复现基础设施**、
+  **症状 → 原因 → 处理速查表**、**仓库卫生与主题定制**（本技能新增）。
 
-两处内容冲突时以本技能为准，尤其是「章节编号」与「前端样式」两部分。
+两处内容冲突时以本技能为准，尤其是「章节编号」与「前端样式」两部分
+（`course-notebook-generator` 里的 `CHAPTER_ORDER` 用标题做键、拓展用 `4+` 标注，均已废弃）。
 
 ---
+
+## 关键经验总结
+
+1. **npm ci vs npm install**：`npm ci` 要求精确匹配 `package-lock.json`；CI 中 `npm install` 更容错
+2. **章节编号**：必须跨模块连续；`getCatalog()` 必须返回 `chapterOrder` 字段
+3. **基础路径**：vite.config 中的 `base: './'` 对 GitHub Pages 子路径至关重要
+4. **部署源**：使用 "GitHub Actions" 而非 "Deploy from a branch" — 否则显示原始文件
+5. **Notebook 目录**：Vite 虚拟模块在构建时扫描；构建时 notebooks 必须在仓库中
+6. **强制推送**：`--force-with-lease` 是比 `--force` 更安全的替代；始终获得用户确认
+7. **质量债务**：每批审计和修复后再生成下一批 — 不要让「太抽象」累积
+8. **教学风格**：walkinglabs 风格（直觉 → 小数字 → 公式 → 代码 → 关键观察）显著提升零基础可访问性
+9. **预渲染输出**：执行 Notebook 并嵌入输出可大幅提升用户体验，无需本地运行环境
+10. **双语支持**：默认中文，英文版本需用户显式要求，避免不必要的双倍工作量
+11. **参考优先**：先读参考项目 `web/` 的样式与组件再动手；不要凭印象重写、也不要裁剪设计系统
+12. **CSS 就是功能**：裁剪 `index.css` 会让 90+ 个样式类与 10+ 个变量失效，页面"看起来全错"
+13. **渲染器比标准 Markdown 严格**：表格分隔行 ≥3 个短横线、强调不跨行、转义需显式支持
+14. **页面标题只出现一次**：正文首个 H1 要剥离（页面顶部已用 `meta.title` 渲染）
+15. **编号用目录名推导**：用标题做排序键会集体退化成 999
+16. **一个学习要点一个 Notebook**：拓展进附录，不用 `+` 标签
+17. **复现三件套**：`utils.py`、`requirements.txt`、注册 ipykernel —— 缺一件 Notebook 就跑不起来
+18. **机器验收优于肉眼**：SSR 渲染体检 + 线上 asset 校验能提前拦住大部分"看起来不对"
+19. **换色改两处**：CSS 变量 + 组件里的字面颜色类（`bg-blue-600`、`from-[#dbeafe]` 这类不随变量变）
 
 ## 参考模板
 
@@ -1252,4 +1123,3 @@ CI 失败的 Notebook 不允许合入 main——防止"本地能跑、读者跑�
 - [self-improving-agent-notebook](https://github.com/walkinglabs/self-improving-agent-notebook) - Stanford CS329A 课程模式
 - [hands-on-world-models](https://github.com/walkinglabs/hands-on-world-models) - 学术引用规范
 - [hands-on-modern-rl](https://github.com/walkinglabs/hands-on-modern-rl) - 章节结构与可视化
-- [Hands-On-Computer-Vision](https://github.com/ZOUMDA28/Hands-On-Computer-Vision) - 笔记高亮、书签、搜索、橙色主题、完整 Welcome 页等增强功能的参考实现
