@@ -326,7 +326,7 @@ university-course-site/
 1. **优先级**：GitHub 热门仓库（★ > 1000）优先 → 最新课程作业 → 论文
 2. **标注来源**：在 Notebook 末尾，列出 GitHub 仓库 URL 和作业/讲座来源
 3. **改编而非复制**：将代码适配到 Notebook 风格，添加中文注释，使用固定种子
-4. **零依赖**：核心算法手动实现；仅使用 numpy/matplotlib 进行 I/O
+4. **分层依赖**：教学核心层手动实现（仅 numpy/torch 基础 API）；实际应用层直接用现代生态库（transformers/trl/peft 等），注明版本
 
 ### 5. 学术引用规范
 
@@ -357,21 +357,54 @@ _图 1.1-1：DRQN 的连续帧卷积响应。出处：Hausknecht & Stone，[Deep
 - 研读笔记内容：论文核心思想、关键公式/算法、实验数字、教学主线、代码演示切入点
 - 可选：`scripts/download_papers.py` 脚本按 arXiv ID 下载论文 PDF
 
-### 6. 代码要求
+### 6. 代码要求（2026 科研与实际应用标准）
 
-**零依赖原则：**
-- 核心算法从零实现，不使用 LangChain、transformers 等封装库
-- 仅依赖基础库：numpy, matplotlib, torch（如需深度学习）
-- 每个代码块短小精炼（<50行），添加充分中文注释
+**双层代码策略（教学核心从零实现 + 实际应用用现代生态）：**
+
+| 层次 | 适用场景 | 依赖策略 |
+|------|----------|----------|
+| **教学核心层** | 算法原理讲解（如注意力机制、梯度更新、采样循环） | 从零实现，只用 numpy / torch 基础 API，让读者看清数学本质 |
+| **实际应用层** | 与论文 SOTA 对齐的实验、贴近生产环境的 demo | **直接使用现代科研生态**，不要重复造轮子 |
+
+- **教学核心层**：核心算法从零实现，每个代码块短小精炼（<50行），添加充分中文注释
+- **实际应用层**：优先使用经过验证的现代库，并给出版本与官方文档链接：
+  - LLM/NLP：`transformers`、`trl`（SFT/DPO/GRPO）、`peft`（LoRA/QLoRA）、`accelerate`、`datasets`
+  - 推理部署：`vllm`、`ollama`、`llama.cpp`（至少给一种本地推理示例）
+  - 视觉/多模态：`timm`、`diffusers`
+  - 实验管理：`wandb` 或最小化的 JSON/CSV 日志（二选一，注明为什么）
+- **禁用标准**：不用 LangChain 这类抽象层级过高、API 变动剧烈的封装框架做教学主线；Agent 教学直接用 `openai`/`anthropic` SDK + 手写工具调用循环，反而更清晰
+
+**代码工程质量（实际应用要求）：**
+- 函数签名带**类型注解**，关键函数附 docstring
+- 训练类代码必须包含：混合精度（`torch.autocast`/`accelerate`）、梯度累积说明、checkpoint 保存/恢复的最小示例
+- 代码风格参考主流开源仓库（ruff 格式化可选项），变量命名与论文符号对应（如 `logits`、`d_model`）
+- 不再手写"读配置 magic number"——超参集中在 Notebook 顶部一个 dict/dataclass 中
 
 **作业与验证：**
 - 每篇 Notebook 末尾含 2-3 道作业练习
 - 代码含 `assert` 语句保证正确性
-- 作业应覆盖：概念理解、代码实现、实验分析
+- 作业应覆盖：概念理解、代码实现、实验分析；实际应用层可再增 1 道"工程迁移题"（如把手写实现换成 `trl` 版本并对比结果）
 
 **实验可复现：**
-- 使用固定随机种子（`np.random.seed(42)`, `torch.manual_seed(42)`）
+- 使用固定随机种子（`np.random.seed(42)`, `torch.manual_seed(42)`；实际应用层用 `transformers.set_seed(42)`）
 - 每个 Notebook 独立可运行，不依赖前面的状态
+- 关键实验给出运行硬件与耗时报表（如「RTX 4060 8GB，约 12 分钟」）
+
+**代码风格参考（easy-llm-master 规范，本地 `D:/CODE/easy-llm-master`）：**
+
+写训练脚本和模型实现时以该仓库为风格基准，其可复用的做法：
+
+1. **文件头 docstring 自带使用说明**：说明脚本结构、支持的功能开关、可直接复制运行的命令行示例（Windows/Linux 通用）
+2. **中文 docstring 三段式**：功能一句话 → 参数列表（`参数名: 类型 说明`）→ 返回形状；张量形状始终标注（如 `[..., d_model]`、`(B, m, vocab_size)`）
+3. **注释解释「为什么」而不是「是什么」**：如「裁剪前必须 `scaler.unscale_`，否则阈值是对放大后的梯度生效的」
+4. **行内注释带形状变化**：`# (batch_size, seq_len) -> (batch_size, seq_len, embed_dim)`
+5. **assert 前置条件**：如 `assert d_k % 2 == 0, "RoPE 要求向量维度 d_k 必须是偶数"`，在错误发生处就拦截
+6. **消融开关设计**：组件自带开关（如 `remove: bool = False`、`--no_rmsnorm`），方便对照实验而不需改代码
+7. **用 einops/einsum 显式表达维度语义**：`einsum(x, w, "... d_in, d_out d_in -> ... d_out")` 替代裸 matmul
+8. **超参集中 + 实验命名规范**：`--run_name` 按「类型-lr峰值_谷值-bs-种子」拼（如 `lr_sweep-lr3e-4_3e-5-bs64-s2026`），wandb `config=vars(args)` 全量存档
+9. **checkpoint 分层保存**：`{save_dir}/{数据集}/{实验名}/iter{步数:06d}.pt`，换数据集自动分开
+10. **大数据集用 `np.load(..., mmap_mode="r")`** 惰性加载
+11. **作业驱动注释**：组件上标 `# Problem N: 实现 XX 模块 (n 分)`，与课程作业直接对应
 
 ### 7. 图片与可视化要求
 
@@ -1108,7 +1141,7 @@ jobs:
 8. **学术严谨**: 每个知识点必须有论文出处，使用标准引用格式
 9. **代码作业**: 每篇 Notebook 必须有可运行代码和作业练习（含 assert 验证）
 10. **论文研读**: papers/ 目录记录每节课的论文研读笔记
-11. **零依赖实现**: 核心算法从零实现，不使用封装库
+11. **双层代码策略**: 教学核心层从零实现看清数学本质；实际应用层用现代生态（transformers/trl/peft/accelerate），类型注解 + 混合精度 + checkpoint 最小示例
 12. **可视化**: 每个核心概念配 matplotlib 图表或论文配图
 13. **多课程交叉对照**: 以斯坦福为主线，对照 MIT/CMU/Berkeley 同类课程改写优化
 14. **语言策略**: 模式二默认中文生成，英文版本需用户显式要求；README 同时提供中英文
