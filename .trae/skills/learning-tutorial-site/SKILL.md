@@ -1,6 +1,6 @@
 ---
 name: "learning-tutorial-site"
-description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（React+Vite+KaTeX），含前端样式对账与渲染体检。支持笔记高亮、书签、搜索筛选、代码折叠、图片灯箱、大纲导航等完整功能。两种模式：(1) 自有 ipynb 教程网站；(2) 按研究方向生成大学课程级学术教程。默认中文，英文需告知。当用户要创建/修改在线教程或课程网站时调用。"
+description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（React+Vite+KaTeX），含前端样式对账与渲染体检。支持笔记高亮、书签、搜索筛选、代码折叠、图片灯箱、大纲导航等完整功能。两种模式：(1) 自有 ipynb 教程网站；(2) 按研究方向生成大学课程级学术教程（2026 更新：引用核验、现代工具链 uv、CI 校验、开源合规）。默认中文，英文需告知。当用户要创建/修改在线教程或课程网站时调用。"
 ---
 
 # Learning Tutorial Site Generator
@@ -106,7 +106,12 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 4. 如果某实验 Berkeley 做得更直观，则参照其实验设计
 5. 在 Notebook 中标注内容来源（如「本节视角参考 MIT 6.S191 Lecture 5」）
 
-**Step 5：前沿论文增强**
+**引用真实性硬规则（防幻觉）**：
+- 每条引用写入 Notebook 前，**必须用 WebSearch/WebFetch 打开 arXiv 页面核实**：标题、作者、年份、arXiv ID 四项一致才可写入；
+- **严禁凭记忆编造论文标题、作者或 arXiv ID**——无法核实的引用直接删除，宁缺毋假；
+- 课程编号同样要核实（课程号每年会调整，如 MIT 6.5940 曾为 6.S193/6.5940 演变），以课程官网当年页面为准。
+
+**Step 5：前沿论文增强（2025–2026 科研需要）**
 1. 搜索各课程最新学期的阅读清单
 2. 搜索 arXiv 最新相关论文
 3. 将最新论文融入对应章节
@@ -129,11 +134,12 @@ description: "基于 Jupyter Notebook 的交互式学习教程网站生成器（
 4. 搜索 `{大学名} {课程号} github` 查找课程代码仓库
 5. 搜索 `site:scholar.google.com {研究方向} survey 2024 2025` 找最新综述
 
-**常用课程入口：**
-- 斯坦福：`cs.stanford.edu/academicprograms/courses`，或直接搜 `stanford.edu/cs{课程号}`
-- MIT：`ocw.mit.edu`，或 `mit.edu/6.{课程号}`
-- CMU：`cs.cmu.edu/~{课程号}`
-- Berkeley：`cs.berkeley.edu/~{教授名}/{课程号}`
+**常用课程入口（含 2025–2026 热门课，检索后仍须核实当年课程号）：**
+- 斯坦福：`cs.stanford.edu/academicprograms/courses`，或直接搜 `stanford.edu/cs{课程号}`；热门：CS224N（NLP/LLM）、CS231N（CV）、CS336（Language Modeling from Scratch）、CS330（多任务与元学习）、CS25（Transformers United）
+- MIT：`ocw.mit.edu`，或 `mit.edu/6.{课程号}`；热门：6.S191（深度学习导论，每年更新 LLM 内容）、6.5940（TinyML 高效深度学习）、6.867（ML 基础）
+- CMU：cs.cmu.edu/~{课程号}；热门：10-701/10-708（ML/深度学习）、11-711（NLP）
+- Berkeley：`cs.berkeley.edu/~{教授名}/{课程号}`；热门：CS285（深度 RL）、CS294
+- 其他可参考：Princeton COS 597G（理解大语言模型）、国内高校公开课（可选补充，须核实公开许可）
 
 ---
 
@@ -1132,6 +1138,59 @@ jobs:
 38. **TOC 大纲**: 右侧大纲导航，滚动监听高亮当前位置，有笔记的标题显示提示
 39. **代码折叠复制**: 长代码块和长输出可折叠；每个代码格有复制按钮
 40. **响应式设计**: 移动端侧边栏遮罩、TOC 悬浮弹窗、笔记编辑器 bottom-sheet 模式
+41. **引用必核实**: 论文标题/作者/年份/arXiv ID 四项核实后才写入；无法核实就删除
+42. **现代工具链**: 优先 uv 管理环境；requirements.txt 锁定具体版本号
+43. **CI 校验**: GitHub Actions 重跑 Notebook，0 error 才允许合入 main
+44. **资源开销透明**: Notebook 头部注明运行时长与显存需求，提供 CPU 可跑的小规模版本
+45. **结果可信**: 多 seed 取均值±标准差；与论文数字不一致时说明原因
+46. **开源合规**: LICENSE 与引用代码兼容；论文配图标注出处；数据集注明许可
+
+---
+
+## 面向科研与实际应用（2026 更新）
+
+### 选题与内容要求
+
+- **贴合当前科研热点**：LLM 预训练与后训练（RLHF/DPO/GRPO）、Agent 与工具调用、多模态、具身智能/世界模型、高效推理（量化/蒸馏）、AI for Science。选题过时（如纯入门 SVM 教程）时应建议用户补充前沿章节。
+- **理论—实现—工程三线并重**：科研读者不仅要公式与手写实现，还需要**工程实践视角**——显存/算力估算、训练稳定性技巧、checkpoint 管理、混合精度、分布式数据并行的最小示例。
+- **每个实验标注资源开销**：在 Notebook 头部注明预计运行时长、显存需求，并提供**CPU 可跑的小规模版本**作为兜底（Colab 免费额度有限，读者不一定有 GPU）。
+
+### 现代工具链
+
+- **包管理**：优先 `uv`（`uv pip install`、`uv venv`），生成 `requirements.txt` 时锁定具体版本号（`numpy>=1.26` 这种宽松写法在复现时会翻车）。
+- **Python 版本**：以 3.10–3.12 为准，避免使用已废弃 API。
+- **执行**：`jupyter nbconvert --execute` 仍是标准路径；执行环境与 `requirements.txt` 一致，CI 中可加 `uv pip install -r requirements.txt` 后重跑验证。
+
+### CI 自动化校验（推荐加入仓库）
+
+在 `.github/workflows/` 中除部署外增加校验 job：
+
+```yaml
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install -r requirements.txt jupyter nbconvert ipykernel
+      - run: |
+          # 重跑全部 Notebook，校验 0 error cell（长时 Notebook 可抽样或加 continue-on-error 注记）
+          find notebooks -name '*.ipynb' -exec jupyter nbconvert --to notebook --execute --inplace {} \;
+```
+
+CI 失败的 Notebook 不允许合入 main——防止"本地能跑、读者跑不起来"的教程上线。
+
+### 开源与合规
+
+- **LICENSE** 必须存在且与引用代码兼容（引用 MIT/Apache 代码需保留原版权声明）。
+- **图片版权**：论文配图标注出处且仅用于教学（fair use）；不确定来源的图一律自己用 matplotlib 重绘。
+- **数据集**：注明来源、许可与引用格式；不把需要授权的数据集文件提交进仓库。
+
+### 数据与结果可信度
+
+- 图表必须**坐标轴带单位、图例完整**，避免"无刻度装饰图"。
+- 数值结论要有不确定性意识：多次运行取均值±标准差（至少 3 seeds），而不是单次结果下结论。
+- 与论文报告数字不一致时，明确说明差异原因（数据规模/超参/硬件），不要悄悄改数。
 
 ---
 
