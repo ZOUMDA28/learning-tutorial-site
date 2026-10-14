@@ -671,6 +671,30 @@ for root, _, files in os.walk('notebooks'):
                     print('分隔行不合规', root, i, cells)
 ```
 
+### 3b. 必须先做 JSON 合法性检查（否则整章打不开）
+
+`json.loads` 抛错 = 该章在前端**完全打不开**（目录标题都提取不到），比样式问题更严重。
+最常见成因：**中文文案里内嵌了未转义的英文双引号**（如 `理解为什么"拼拼图"能学到特征`），
+写进 JSON 字符串后直接破坏结构。生成/脚本改写 Notebook 后必跑：
+
+```python
+import json
+from pathlib import Path
+for p in Path('notebooks').rglob('*.ipynb'):
+    try:
+        json.loads(p.read_text(encoding='utf-8'))
+    except json.JSONDecodeError as e:
+        print('JSON 损坏:', p, e)     # 应输出 0 行
+```
+
+**修复要点**：只对 `source` 数组里的「字符串元素行」转义（跳过 `"key": value` 键值行，
+否则会把键名一起转义导致新的损坏）；转义内部 `"` → `\"` 后用 `json.loads` 复核，
+再以 `indent=1` 标准格式写回。
+
+**批量追加单元格的守卫写法**：判重时不要用「文中是否含某关键词」，因为刚插入的说明文字
+可能本身就含该词（例如加在章首的「运行说明」里提到「实际应用层」，会让守卫误判为已存在，
+导致单元静默不追加）。改用**带分隔符的标题**判定，如 `'实际应用层：' in md`（带全角冒号）。
+
 ### 4. 页面标题不要重复
 
 `NotebookViewer` 顶部已渲染 `meta.title`（该标题正是从 Notebook 第一个 `# 一级标题` 提取的）。
@@ -768,6 +792,9 @@ await server.close()
 
 | 症状 | 最可能的原因 | 处理 |
 |------|--------------|------|
+| 某章打开空白/报错 | Notebook JSON 内嵌未转义的英文双引号 | 转义 `"`→`\"`（只处理 source 元素行），`json.loads` 复核后写回 |
+| 侧边栏缺若干章节 | `getSidebarSections` 的 `partNames`/`order` 未覆盖新增 part 目录 | 补齐两个数组，并断言「实际 part 目录集合 == 注册集合」 |
+| 重命名/重编号后首页卡片点击无反应 | `notebookId` 随目录改名失效（含把 `01-x` 写成 `11-x` 这类错配） | 重编号后全局校验：卡片 id ⊆ catalog id，缺失即 0 |
 | 元素大面积没样式 | `index.css` 被裁成空壳 | 完整移植设计系统 CSS，跑类名/变量对账脚本 |
 | 公式无样式、排版错乱 | KaTeX CSS 走 CDN 且不可达 | 入口 CSS `@import "katex/dist/katex.min.css"` |
 | 页面出现裸的 `\| a \| b \|` | 表格分隔行不足 3 个短横线 | 统一改为 `\|:---:\|` |
@@ -887,6 +914,25 @@ export function getCatalog() {
 
 新增章节目录时以两位数字开头（如 `10-xxx`），无需改动任何映射表；
 未编号目录（如 `appendix/`）自动排到最后。
+
+### 重编号 checklist（改造既有教程时逐项执行）
+
+章节目录一旦改名，**四处会同时失效**，必须一起改并机器校验：
+
+| 步骤 | 动作 | 校验 |
+|------|------|------|
+| 1 | `git mv` 重命名章节目录（必要时三步走避免命名撞车：`A→tmp`、`B→A`、`tmp→B`） | `git status` 无冲突 |
+| 2 | 同步正文 H1 章号与小节号（`# 第 N 章`、`## N.x`、`### N.x`） | 抽查标题与目录名一致 |
+| 3 | 前端数据：`notebooks.js` 的 `partNames`/`order`、`sidebar.js` 的 `PATH_STEPS`/`RUNNABLE_NOTEBOOKS`/`SECTION_STYLES` | 断言 part 集合一致、卡片 id ⊆ catalog id |
+| 4 | 文档：README 课程大纲、章节计数 | 与目录结构逐一对照 |
+
+**判定顺序原则**：重编号后必须让章号**跨部分连续**（1..N 不重置）；
+`getCatalog()` 的 `chapterOrder` 由目录名前导数字推导，重跑一次即可自动生效。
+**注意教学先后**：结构性论文与依赖它的章节顺序要对（例：注意力 → ViT → ConvNeXt），
+不要沿用历史目录里偶然的字母序。
+
+**Windows 环境提示**：目录被编辑器/索引占用时 `git mv` 会 `Permission denied`，
+改用 `shutil.move` / PowerShell `Rename-Item` 重试；随后用 Python 复核目录结构。
 
 ---
 
