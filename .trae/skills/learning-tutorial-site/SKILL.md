@@ -695,6 +695,40 @@ for p in Path('notebooks').rglob('*.ipynb'):
 可能本身就含该词（例如加在章首的「运行说明」里提到「实际应用层」，会让守卫误判为已存在，
 导致单元静默不追加）。改用**带分隔符的标题**判定，如 `'实际应用层：' in md`（带全角冒号）。
 
+### 3c. 行结构必须符合 Jupyter 约定（脚本批量写入时最易踩）
+
+`source` 是一个**行数组**，前端渲染器按 `source.join('')` 拼接——因此**除最后一行外，每个元素都必须以 `\n` 结尾**。
+脚本批量写入时若写成 `text.split('\n')`（或 `text.split('\n\n')`），换行符就丢了，后果是：
+
+| 症状 | 根因 |
+|------|------|
+| 整章正文变成一大段，标题/列表/表格挤在一行 | markdown 行被拼接 |
+| 表格渲染成裸文本 `\| a \| b \|` | 表格首行与上一段粘连，分隔行判定错位 |
+| 代码块显示成一行长代码、高亮全乱 | 代码行被拼接（严重时脚本无法直接复制运行） |
+
+**正确写法**：
+
+```python
+def lines(text: str) -> list:
+    ls = text.split('\n')
+    return [l + '\n' for l in ls[:-1]] + [ls[-1]]   # 除最后一行外补换行符
+```
+
+**修复存量**：若元素边界还在（元素个数正确、只是每行缺 `\n`），可无损批量补齐：
+
+```python
+for c in nb['cells']:
+    src = c.get('source')
+    if isinstance(src, list) and len(src) > 1:
+        c['source'] = [l if l.endswith('\n') else l + '\n' for l in src[:-1]] + [src[-1]]
+```
+
+**删除旧单元时要整单元删除**（命中标记的 markdown 格 **+ 紧随其后的代码格**），
+否则残留的旧代码格仍带着坏行结构，会被校验脚本再次抓出来。
+
+**常驻自检**（建议放进 CI 的零依赖 job，`scripts/check_notebooks.py` 即此实现）：
+JSON 合法性 → 编号连续无重复 → 首个 markdown 是 H1 → `$$` 配对 → 表格分隔行 ≥3 短横线 → 行结构合规。
+
 ### 4. 页面标题不要重复
 
 `NotebookViewer` 顶部已渲染 `meta.title`（该标题正是从 Notebook 第一个 `# 一级标题` 提取的）。
@@ -999,6 +1033,10 @@ jobs:
 |------|----------|
 | SSH 连接重置 | 切换到 HTTPS：`git remote set-url origin https://github.com/USER/REPO.git` |
 | `npm ci` 失败 | 改用 `npm install` |
+| **workflow 在 Setup Node.js 步骤就失败** | `actions/setup-node` 配了 `cache: 'npm'` + `cache-dependency-path` 但仓库**没有提交 package-lock.json** → 直接报错。删掉 cache 两行，改用 `npm install` |
+| **构建日志出现 `jekyll v3.x` / 页面显示 README** | Pages 源被设成「Deploy from a branch」，GitHub 走了 Jekyll 老流程。必须把 Source 改为 **GitHub Actions**（仓库设置无法用 git 改，需人工点一次） |
+| 排查 workflow 失败但本机没有 gh CLI | 直接读 API：`https://api.github.com/repos/OWNER/REPO/actions/runs?per_page=5`（可加 `&head_sha=<sha>` 定位某次提交），看 `conclusion` 字段 |
+| 产物中 `_` 开头资源 404 | 构建后 `touch docs/.nojekyll` |
 | Pages 显示原始 README | Settings → Pages → Source = "GitHub Actions" |
 | 侧边栏为空（"未找到相关章节"） | 检查 `notebooks/` 目录是否存在于仓库；检查构建后的 JS 中的 `NOTEBOOK_CATALOG`；验证 `getCatalog()` 返回非空 |
 | 章节号全为 0 | `getCatalog()` 必须包含 `chapterOrder` 字段 |
